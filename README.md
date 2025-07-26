@@ -15,18 +15,18 @@ The dApp features a custom RPC Proxy Server that acts as a gatekeeper for transa
 
 ```mermaid
 graph TD
-    subgraph User's Browser
-        A[React Frontend <br> (Vite)] -- "Wallet Actions" --> B{Dynamic.xyz SDK};
-        A -- "API Requests" --> C[RPC Proxy Server <br> (Express)];
+    subgraph "User's Browser"
+        A["React Frontend <br> (Vite)"] -- "Wallet Actions" --> B{"Dynamic.xyz SDK"};
+        A -- "API Requests" --> C["RPC Proxy Server <br> (Express)"];
     end
 
-    subgraph External Services
-        B -- "Authentication" --> D[Wallets <br> (MetaMask, etc.)];
-        C -- "Read/Write RPC Calls" --> E[Caldera RPC];
-        C -- "Attestation Check" --> F[EAS GraphQL API];
+    subgraph "External Services"
+        B -- "Authentication" --> D["Wallets <br> (MetaMask, etc.)"];
+        C -- "Read/Write RPC Calls" --> E["Caldera RPC"];
+        C -- "Attestation Check" --> F["EAS GraphQL API"];
     end
 
-    E -- "Blockchain Data" --> G((Base Blockchain));
+    E -- "Blockchain Data" --> G(("Base Blockchain"));
     F -- "Attestation Data" --> G;
 
     style A fill:#e7fb3c,stroke:#333,stroke-width:2px;
