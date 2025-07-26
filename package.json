@@ -4,15 +4,17 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "node": "18"
   },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:production": "NODE_ENV=production vite build",
+    "postbuild": "ls -la dist/",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "preview": "vite preview",
-    "start": "node server.js"
+    "start": "node server.js",
+    "deploy": "./deploy.sh"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -1,5 +1,5 @@
-# Use Node.js 18 as base image
-FROM node:18-alpine AS builder
+# Use specific Node.js version
+FROM node:18.19.0-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies with legacy peer deps flag
+RUN npm ci --legacy-peer-deps
 
 # Copy source code
 COPY . .
@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:18.19.0-alpine AS production
 
 # Set working directory
 WORKDIR /app
@@ -26,7 +26,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --only=production --legacy-peer-deps && npm cache clean --force
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
@@ -48,4 +48,4 @@ USER appuser
 EXPOSE 8080
 
 # Start the application
-CMD ["npm", "start"] 
+CMD ["node", "server.js"] 

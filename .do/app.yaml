@@ -5,8 +5,8 @@ services:
   github:
     repo: your-username/rayls-dapp
     branch: main
-  run_command: npm start
-  build_command: npm install && npm run build
+  run_command: node server.js
+  build_command: npm ci --legacy-peer-deps && npm run build
   environment_slug: node-js
   instance_count: 1
   instance_size_slug: basic-xxs
@@ -15,6 +15,8 @@ services:
     value: production
   - key: PORT
     value: "8080"
+  - key: NODE_VERSION
+    value: "18.19.0"
   routes:
   - path: /
   health_check:
