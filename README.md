@@ -15,22 +15,33 @@ The dApp features a custom RPC Proxy Server that acts as a gatekeeper for transa
 
 ```mermaid
 graph TD
-    subgraph "User's Browser"
-        A["React Frontend <br> (Vite)"] -- "Wallet Actions" --> B{"Dynamic.xyz SDK"};
-        A -- "API Requests" --> C["RPC Proxy Server <br> (Express)"];
+    subgraph "User"
+        direction LR
+        subgraph "Browser"
+            A["React Frontend (Vite)"]
+        end
+        H["Wallet (e.g. MetaMask)"]
+    end
+
+    subgraph "Backend Services"
+        B["RPC Proxy Server (Express)"]
     end
 
     subgraph "External Services"
-        B -- "Authentication" --> D["Wallets <br> (MetaMask, etc.)"];
-        C -- "Read/Write RPC Calls" --> E["Caldera RPC"];
-        C -- "Attestation Check" --> F["EAS GraphQL API"];
+        C["Dynamic.xyz"]
+        D["Caldera RPC"]
+        E["EAS GraphQL API (Base)"]
+        F["Base Blockchain"]
+        G["Rayls Testnet Blockchain"]
     end
 
-    E -- "Blockchain Data" --> G(("Base Blockchain"));
-    F -- "Attestation Data" --> G;
-
-    style A fill:#e7fb3c,stroke:#333,stroke-width:2px;
-    style C fill:#b49aff,stroke:#333,stroke-width:2px;
+    A -- "Authentication" --> C;
+    A -- "Queries for attestation<br/>to display in UI" --> E;
+    H -- "RPC Requests" --> B;
+    B -- "Forwards requests" --> D;
+    D -- "Interacts with" --> G;
+    B -- "Validates transactions against" --> E;
+    E -- "Reads from" --> F;
 ```
 
 ## Getting Started
@@ -44,7 +55,7 @@ graph TD
 
 1.  Clone the repository to your local machine:
     ```bash
-    git clone <your-repository-url>
+    git clone https://github.com/AlexJupiter/rayls-dapp.git
     ```
 
 2.  Navigate to the project directory:
