@@ -7,7 +7,7 @@ import axios from 'axios';
 export const Dashboard: React.FC = () => {
   const { isAuthenticated, user, primaryWallet } = useDynamicContext();
   const navigate = useNavigate();
-  const [hasAttestation, setHasAttestation] = useState(false);
+  const [attestationId, setAttestationId] = useState<string | null>(null);
   const [isLoadingAttestation, setIsLoadingAttestation] = useState(true);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export const Dashboard: React.FC = () => {
         try {
           const response = await axios.post('https://base.easscan.org/graphql', { query });
           if (response.data.data.attestations.length > 0) {
-            setHasAttestation(true);
+            setAttestationId(response.data.data.attestations[0].id);
           }
         } catch (error) {
           console.error('Error fetching attestation:', error);
@@ -99,9 +99,14 @@ export const Dashboard: React.FC = () => {
                   <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
                     <p className="text-gray-600">Checking for attestations...</p>
                   </div>
-                ) : hasAttestation ? (
+                ) : attestationId ? (
                   <div className="space-y-5">
-                    <a href="#" className="group bg-white border border-gray-200 rounded-lg p-5 hover:bg-white/90 transition-colors shadow-sm block hover:shadow-[0_0_15px_rgba(179,136,255,0.3)] transition-all duration-300">
+                    <a 
+                      href={`https://base.easscan.org/attestation/view/${attestationId}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="group bg-white border border-gray-200 rounded-lg p-5 hover:bg-white/90 transition-colors shadow-sm block hover:shadow-[0_0_15px_rgba(179,136,255,0.3)] transition-all duration-300"
+                    >
                       <div className="flex items-start">
                         <div className="bg-[#b388ff]/30 p-2 rounded-full mr-4 mt-1 flex items-center justify-center">
                           <div className="font-bold text-[#0052ff]">CB</div>
