@@ -1,26 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { DynamicWidget, useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { ArrowRight } from 'lucide-react';
-interface HomeProps {
-  connected?: boolean;
-  connectWallet?: () => Promise<string | null>;
-  walletAddress?: string;
-}
-export const Home: React.FC<HomeProps> = ({
-  connectWallet
-}) => {
+
+export const Home: React.FC = () => {
   const navigate = useNavigate();
-  const handleConnectWallet = async () => {
-    if (connectWallet) {
-      const address = await connectWallet();
-      if (address) {
-        navigate('/dashboard');
-      }
-    } else {
-      // Go directly to dashboard instead of login
+  const { isAuthenticated } = useDynamicContext();
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
       navigate('/dashboard');
     }
-  };
+  }, [isAuthenticated, navigate]);
+
   return <div className="w-full h-screen bg-[#e7fb3c]">
       <div className="relative overflow-hidden h-full">
         {/* Purple arc elements with flowing bands */}
@@ -45,10 +37,7 @@ export const Home: React.FC<HomeProps> = ({
                 Testnet.
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <button onClick={handleConnectWallet} className="bg-black hover:bg-gray-900 text-white font-medium py-3 px-6 rounded-full flex items-center justify-center group">
-                  Connect wallet{' '}
-                  <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                </button>
+                <DynamicWidget />
               </div>
               <div className="mt-4 text-center sm:text-left">
                 <p className="text-sm text-black">

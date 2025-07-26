@@ -1,24 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { ExternalLink, Wallet, Droplet, Trophy, BarChart3, CheckCircle, ShieldCheck, ArrowRight, ArrowRight as ArrowRightIcon, FileText, Beaker, Code, Network, Plus } from 'lucide-react';
-interface DashboardProps {
-  connected: boolean;
-  kycVerified: boolean;
-  verifyKYC: () => Promise<boolean>;
-  walletAddress: string;
-}
-export const Dashboard: React.FC<DashboardProps> = ({
-  connected,
-  kycVerified,
-  verifyKYC,
-  walletAddress
-}) => {
+
+export const Dashboard: React.FC = () => {
+  const { isAuthenticated, user, handleLogOut } = useDynamicContext();
   const navigate = useNavigate();
   const [hasAttestations, setHasAttestations] = useState(false);
-  if (!connected) {
-    return null;
+
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (!isAuthenticated || !user) {
+    return <div>Loading...</div>;
   }
-  const truncatedAddress = `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
+
   const handleCreateAttestation = () => {
     setHasAttestations(true);
   };
@@ -31,9 +30,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
             <div className="flex items-center space-x-3">
               <span className="bg-gray-800 text-[#e7fb3c] text-xs font-medium px-3 py-1.5 rounded-full">
-                {truncatedAddress}
+                {user.email}
               </span>
-              <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center">
+              <button onClick={handleLogOut} className="text-gray-400 hover:text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center">
                 Log Out
               </button>
             </div>
