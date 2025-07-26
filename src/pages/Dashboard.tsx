@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
+import { useDynamicContext, DynamicWidget } from '@dynamic-labs/sdk-react-core';
 import { ExternalLink, Wallet, Droplet, Trophy, BarChart3, CheckCircle, ShieldCheck, ArrowRight, ArrowRight as ArrowRightIcon, FileText, Beaker, Code, Network, Plus } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
@@ -24,18 +24,11 @@ export const Dashboard: React.FC = () => {
   return <div className="min-h-screen bg-[#121212] text-white">
       <div className="p-6 md:p-8">
         <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+          <div className="relative z-50 flex justify-between items-center mb-8">
             <div>
               <img src="/Rayls_Logo_Gradient.svg" alt="Rayls Logo" className="h-10" />
             </div>
-            <div className="flex items-center space-x-3">
-              <span className="bg-gray-800 text-[#e7fb3c] text-xs font-medium px-3 py-1.5 rounded-full">
-                {user.email}
-              </span>
-              <button onClick={handleLogOut} className="text-gray-400 hover:text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center">
-                Log Out
-              </button>
-            </div>
+            <DynamicWidget />
           </div>
           {/* Grid layout for all tiles */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
