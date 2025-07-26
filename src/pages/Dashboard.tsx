@@ -81,10 +81,6 @@ export const Dashboard: React.FC = () => {
                   valid attestation to your connected wallet address.
                 </p>
               </div>
-              {/* Rayls logo image */}
-              <div className="absolute top-1/2 right-12 transform -translate-y-1/2">
-                <img src="/665deef73423c9ddcbb1387e_Author.png" alt="Rayls Logo" className="w-16 h-16 rounded-full" />
-              </div>
             </div>
             {/* Attestations Section */}
             <div className="col-span-1 sm:col-span-2 lg:col-span-3 bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-8">
