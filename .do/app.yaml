@@ -1,0 +1,16 @@
+name: rayls-dapp
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: your-username/rayls-dapp
+    branch: main
+  run_command: npm start
+  build_command: npm run build
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  routes:
+  - path: /
+  health_check:
+    http_path: / 
