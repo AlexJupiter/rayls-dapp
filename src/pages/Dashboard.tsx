@@ -1,26 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDynamicContext, DynamicWidget } from '@dynamic-labs/sdk-react-core';
 import { ExternalLink, Wallet, Droplet, Trophy, BarChart3, CheckCircle, ShieldCheck, ArrowRight, ArrowRight as ArrowRightIcon, FileText, Beaker, Code, Network, Plus } from 'lucide-react';
+import axios from 'axios';
 
 export const Dashboard: React.FC = () => {
-  const { isAuthenticated, user, handleLogOut } = useDynamicContext();
+  const { isAuthenticated, user, primaryWallet } = useDynamicContext();
   const navigate = useNavigate();
-  const [hasAttestations, setHasAttestations] = useState(false);
+  const [hasAttestation, setHasAttestation] = useState(false);
+  const [isLoadingAttestation, setIsLoadingAttestation] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isAuthenticated) {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
 
+  useEffect(() => {
+    const checkAttestation = async () => {
+      if (primaryWallet) {
+        const walletAddress = primaryWallet.address;
+        const query = `
+          query GetAttestationsBySchemaAndRecipient {
+            attestations(
+              where: {
+                schemaId: { equals: "0xf8b05c79f090979bf4a80270aba232dff11a10d9ca55c4f88de95317970f0de9" }
+                recipient: { equals: "${walletAddress}"}
+                revoked: {equals: false}
+              }
+            ) {
+              id
+            }
+          }
+        `;
+        try {
+          const response = await axios.post('https://base.easscan.org/graphql', { query });
+          if (response.data.data.attestations.length > 0) {
+            setHasAttestation(true);
+          }
+        } catch (error) {
+          console.error('Error fetching attestation:', error);
+        } finally {
+          setIsLoadingAttestation(false);
+        }
+      } else if (user) {
+        // Handle case where user is authenticated but wallet is not yet available
+        setIsLoadingAttestation(false);
+      }
+    };
+
+    checkAttestation();
+  }, [user, primaryWallet]);
+
   if (!isAuthenticated || !user) {
     return <div>Loading...</div>;
   }
-
-  const handleCreateAttestation = () => {
-    setHasAttestations(true);
-  };
+  
   return <div className="min-h-screen bg-[#121212] text-white">
       <div className="p-6 md:p-8">
         <div className="max-w-6xl mx-auto">
@@ -60,19 +95,14 @@ export const Dashboard: React.FC = () => {
                 Attestations enabling transactions on Rayls Testnet
               </h2>
               <div className="space-y-5">
-                {!hasAttestations ? <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-                    <p className="text-gray-600 mb-6">
-                      You currently have no attestations to your connected
-                      wallet address to enable you to transact on Rayls
-                    </p>
-                    <button onClick={handleCreateAttestation} className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center mx-auto transition-colors">
-                      <Plus size={18} className="mr-2" />
-                      Create attestation
-                    </button>
-                  </div> : <div className="space-y-5">
+                {isLoadingAttestation ? (
+                  <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+                    <p className="text-gray-600">Checking for attestations...</p>
+                  </div>
+                ) : hasAttestation ? (
+                  <div className="space-y-5">
                     <a href="#" className="group bg-white border border-gray-200 rounded-lg p-5 hover:bg-white/90 transition-colors shadow-sm block hover:shadow-[0_0_15px_rgba(179,136,255,0.3)] transition-all duration-300">
                       <div className="flex items-start">
-                        {/* Coinbase logo instead of shield */}
                         <div className="bg-[#b388ff]/30 p-2 rounded-full mr-4 mt-1 flex items-center justify-center">
                           <div className="font-bold text-[#0052ff]">CB</div>
                         </div>
@@ -86,7 +116,6 @@ export const Dashboard: React.FC = () => {
                             Your Coinbase account has been verified and attested
                             on-chain
                           </p>
-                          {/* Verify onchain button */}
                           <div className="mt-4 flex items-center text-black text-sm font-medium">
                             Verify onchain{' '}
                             <ArrowRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
@@ -94,12 +123,19 @@ export const Dashboard: React.FC = () => {
                         </div>
                       </div>
                     </a>
-                    {/* Add another attestation button */}
+                  </div>
+                ) : (
+                  <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+                    <p className="text-gray-600 mb-6">
+                      You currently have no attestations to your connected
+                      wallet address to enable you to transact on Rayls
+                    </p>
                     <button className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center mx-auto transition-colors">
                       <Plus size={18} className="mr-2" />
-                      Add another attestation
+                      Create attestation
                     </button>
-                  </div>}
+                  </div>
+                )}
               </div>
             </div>
             {/* Action Tiles */}

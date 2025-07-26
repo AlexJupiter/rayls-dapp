@@ -20,6 +20,7 @@
     "@dynamic-labs/ethereum": "^2.0.0-alpha.5",
     "@dynamic-labs/sdk-react-core": "^2.0.0-alpha.5",
     "@dynamic-labs/types": "^2.0.0-alpha.5",
+    "axios": "^1.11.0",
     "express": "^4.18.2",
     "lucide-react": "^0.441.0",
     "react": "^18.3.1",
