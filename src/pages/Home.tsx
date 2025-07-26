@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useDynamicContext();
+  const { isAuthenticated, setShowAuthFlow } = useDynamicContext();
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -37,14 +37,17 @@ export const Home: React.FC = () => {
                 Testnet.
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <DynamicWidget />
+                <button onClick={() => setShowAuthFlow(true)} className="bg-black hover:bg-gray-900 text-white font-medium py-3 px-6 rounded-full flex items-center justify-center group">
+                  Connect wallet{' '}
+                  <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                </button>
               </div>
               <div className="mt-4 text-center sm:text-left">
                 <p className="text-sm text-black">
                   No wallet? <span>Find out about wallets </span>
-                  <a href="#" className="text-black underline hover:opacity-80">
+                  <button onClick={() => setShowAuthFlow(true)} className="text-black underline hover:opacity-80">
                     here
-                  </a>
+                  </button>
                 </p>
               </div>
             </div>

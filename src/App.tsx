@@ -12,6 +12,13 @@ export function App() {
       settings={{
         environmentId: 'd7fb11b9-b0e9-4ded-af8d-bab12a28e40d',
         walletConnectors: [EthereumWalletConnectors],
+        overrides: {
+          lang: {
+            "en": {
+              "dyn_login.title": "Connect wallet",
+            }
+          }
+        }
       }}
     >
       <BrowserRouter>
