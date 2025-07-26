@@ -6,11 +6,19 @@ services:
     repo: your-username/rayls-dapp
     branch: main
   run_command: npm start
-  build_command: npm run build
+  build_command: npm ci && npm run build
   environment_slug: node-js
   instance_count: 1
   instance_size_slug: basic-xxs
+  envs:
+  - key: NODE_ENV
+    value: production
   routes:
   - path: /
   health_check:
-    http_path: / 
+    http_path: /
+    initial_delay_seconds: 10
+    period_seconds: 10
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3 
