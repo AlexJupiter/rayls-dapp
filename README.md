@@ -1,8 +1,8 @@
 # Rayls Testnet DApp
 
-This project is a decentralized application (dApp) built for the Rayls Testnet. It provides a user-friendly interface for connecting a wallet, viewing on-chain attestations, and interacting with the Rayls network.
+This project is a decentralized application (dApp) built for the Rayls Testnet. It provides a user-friendly interface for connecting a wallet, viewing onchain attestations, and interacting with the Rayls network.
 
-The dApp features a custom RPC Proxy Server that acts as a gatekeeper for transactions. It checks for a specific on-chain attestation (Coinbase Verified Account) before allowing any transactions to be sent to the network, while still permitting read-only requests like checking balances.
+The dApp features a custom RPC Proxy Server that acts as a gatekeeper for transactions. It checks for a specific onchain attestation (Coinbase Verified Account) before allowing any transactions to be sent to the network, while still permitting read-only requests like checking balances.
 
 ## Key Features
 
@@ -101,7 +101,8 @@ To use the attestation-gated transaction feature, you need to add the local prox
 3.  Fill in the network details:
     *   **Network Name**: Rayls Testnet Proxy (or any name you prefer)
     *   **New RPC URL**: `http://localhost:3001/rpc`
-    *   **Chain ID**: *Enter the correct Chain ID for the Rayls testnet here*
-    *   **Currency Symbol**: *Enter the correct currency symbol here*
+    *   **Chain ID**: 1632025
+    *   **Currency Symbol**: ETH
+    *   **Block Explorer URL**: `https://rayls-test-chain.explorer.caldera.xyz/`
 
 Once added, MetaMask will send all requests for this network through your local proxy. You will be able to see your balance, but transactions will only succeed if your connected wallet has the required Coinbase attestation.
