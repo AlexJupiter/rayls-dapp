@@ -15,11 +15,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const navigate = useNavigate();
   const [hasAttestations, setHasAttestations] = useState(false);
-  useEffect(() => {
-    if (!connected) {
-      navigate('/login');
-    }
-  }, [connected, navigate]);
   if (!connected) {
     return null;
   }

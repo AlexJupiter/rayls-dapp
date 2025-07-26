@@ -10,7 +10,6 @@ export const Layout: React.FC<LayoutProps> = ({
   const location = useLocation();
   const isHomePage = location.pathname === '/';
   const isDashboardPage = location.pathname === '/dashboard';
-  const isLoginPage = location.pathname === '/login';
   return <div className={`flex flex-col min-h-screen ${isDashboardPage ? 'bg-gray-50' : 'bg-white'}`}>
       {!isDashboardPage && <Navbar />}
       <main className="flex-grow">{children}</main>
