@@ -3,12 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useDynamicContext, DynamicWidget } from '@dynamic-labs/sdk-react-core';
 import { ExternalLink, Wallet, Droplet, Trophy, BarChart3, CheckCircle, ShieldCheck, ArrowRight, ArrowRight as ArrowRightIcon, FileText, Beaker, Code, Network, Plus, Activity } from 'lucide-react';
 import axios from 'axios';
+import { ethers } from "ethers";
 
 export const Dashboard: React.FC = () => {
   const { isAuthenticated, user, primaryWallet } = useDynamicContext();
   const navigate = useNavigate();
-  const [attestationId, setAttestationId] = useState<string | null>(null);
+  const [coinbaseAttestationId, setCoinbaseAttestationId] = useState<string | null>(null);
+  const [hasBinanceAttestation, setHasBinanceAttestation] = useState(false);
   const [isLoadingAttestation, setIsLoadingAttestation] = useState(true);
+  const [isLoadingBinance, setIsLoadingBinance] = useState(true);
   const [stats, setStats] = useState({ totalWallets: '...', totalTransactions: '...' });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
@@ -39,39 +42,56 @@ export const Dashboard: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const checkAttestation = async () => {
+    const checkAttestations = async () => {
       if (primaryWallet) {
         const walletAddress = primaryWallet.address;
-        const query = `
-          query GetAttestationsBySchemaAndRecipient {
+        
+        // Check for Coinbase Attestation
+        const coinbaseQuery = `
+          query GetCoinbaseAttestation {
             attestations(
               where: {
                 schemaId: { equals: "0xf8b05c79f090979bf4a80270aba232dff11a10d9ca55c4f88de95317970f0de9" }
                 recipient: { equals: "${walletAddress}"}
                 revoked: {equals: false}
               }
-            ) {
-              id
-            }
+            ) { id }
           }
         `;
         try {
-          const response = await axios.post('https://base.easscan.org/graphql', { query });
+          const response = await axios.post('https://base.easscan.org/graphql', { query: coinbaseQuery });
           if (response.data.data.attestations.length > 0) {
-            setAttestationId(response.data.data.attestations[0].id);
+            const attestationId = response.data.data.attestations[0].id;
+            setCoinbaseAttestationId(attestationId);
+
+            // If Coinbase attestation is found, check for Binance BAB token
+            setIsLoadingBinance(true);
+            try {
+              const provider = new ethers.JsonRpcProvider("https://bsc-dataseed.binance.org/");
+              const babContractAddress = "0x2b09d47d550061f995a3b5c6f0fd58005215d7c8";
+              const abi = ["function balanceOf(address owner) view returns (uint256)"];
+              const contract = new ethers.Contract(babContractAddress, abi, provider);
+              const balance = await contract.balanceOf(walletAddress);
+              if (balance > 0) {
+                setHasBinanceAttestation(true);
+              }
+            } catch (binanceError) {
+              console.error('Error checking Binance BAB token:', binanceError);
+            }
           }
         } catch (error) {
-          console.error('Error fetching attestation:', error);
+          console.error('Error fetching attestations:', error);
         } finally {
           setIsLoadingAttestation(false);
+          setIsLoadingBinance(false);
         }
       } else if (user) {
-        // Handle case where user is authenticated but wallet is not yet available
         setIsLoadingAttestation(false);
+        setIsLoadingBinance(false);
       }
     };
 
-    checkAttestation();
+    checkAttestations();
   }, [user, primaryWallet]);
 
   if (!isAuthenticated || !user) {
@@ -163,10 +183,10 @@ export const Dashboard: React.FC = () => {
                   <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
                     <p className="text-gray-600">Checking for attestations...</p>
                   </div>
-                ) : attestationId ? (
+                ) : coinbaseAttestationId ? (
                   <div className="space-y-5">
                     <a 
-                      href={`https://base.easscan.org/attestation/view/${attestationId}`} 
+                      href={`https://base.easscan.org/attestation/view/${coinbaseAttestationId}`} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       className="group bg-white border border-gray-200 rounded-lg p-5 hover:bg-white/90 transition-colors shadow-sm block hover:shadow-[0_0_15px_rgba(179,136,255,0.3)] transition-all duration-300"
@@ -194,7 +214,7 @@ export const Dashboard: React.FC = () => {
                           </div>
                           <p className="text-gray-600 text-sm mb-3">
                             Your Coinbase account has been verified and attested
-                            on-chain
+                            onchain
                           </p>
                           <div className="mt-4 flex items-center text-black text-sm font-medium">
                             Verify onchain{' '}
@@ -203,6 +223,46 @@ export const Dashboard: React.FC = () => {
                         </div>
                       </div>
                     </a>
+                    
+                    {isLoadingBinance ? (
+                      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+                        <p className="text-gray-600">Checking for more attestations...</p>
+                      </div>
+                    ) : hasBinanceAttestation && (
+                      <a
+                        href={`https://bscscan.com/address/${primaryWallet?.address}#asset-nfts`}
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="group bg-white border border-gray-200 rounded-lg p-5 hover:bg-white/90 transition-colors shadow-sm block hover:shadow-[0_0_15px_rgba(179,136,255,0.3)] transition-all duration-300"
+                      >
+                        <div className="flex items-start">
+                          <div className="rounded-full mr-4 mt-1 flex items-center justify-center w-10 h-10">
+                            <svg width="534" height="534" viewBox="0 0 534 534" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+                              <path d="M266.667 533.333C413.943 533.333 533.333 413.943 533.333 266.667C533.333 119.391 413.943 0 266.667 0C119.391 0 0 119.391 0 266.667C0 413.943 119.391 533.333 266.667 533.333Z" fill="#0B0E11"/>
+                              <path d="M191.864 235.931L266.668 161.129L341.51 235.971L385.035 192.443L266.668 74.074L148.338 192.405L191.864 235.931ZM117.602 223.137L161.128 266.663L117.6 310.191L74.0742 266.665L117.602 223.137ZM191.864 297.401L266.668 372.201L341.508 297.363L385.059 340.868L385.035 340.89L266.668 459.259L148.336 340.929L148.275 340.869L191.864 297.401ZM459.264 266.671L415.738 310.196L372.212 266.671L415.738 223.145L459.264 266.671Z" fill="#F0B90B"/>
+                              <path d="M310.815 266.644H310.835L266.667 222.476L222.477 266.666L222.537 266.727L266.667 310.857L310.855 266.666L310.815 266.644Z" fill="#F0B90B"/>
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <h3 className="font-semibold text-lg mr-2">
+                                Binance Verified Account
+                              </h3>
+                            </div>
+                            <p className="text-gray-600 text-sm mb-3">
+                              Your account has been verified by Binance onchain
+                            </p>
+                            <div className="mt-4 flex items-center text-black text-sm font-medium">
+                              Verify onchain{' '}
+                              <ArrowRight
+                                size={14}
+                                className="ml-1 group-hover:translate-x-1 transition-transform"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </a>
+                    )}
                   </div>
                 ) : (
                   <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
