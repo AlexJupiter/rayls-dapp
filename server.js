@@ -26,6 +26,11 @@ const GQL_QUERY = `
     }
 `;
 
+const BAB_CONTRACT_ADDRESS = "0x2b09d47d550061f995a3b5c6f0fd58005215d7c8";
+const BAB_ABI = ["function balanceOf(address owner) view returns (uint256)"];
+const BSC_RPC_ENDPOINT = "https://bsc-dataseed.binance.org/";
+
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -49,32 +54,57 @@ app.post('/rpc', async (req, res) => {
             const tx = ethers.Transaction.from(params[0]);
             const userAddress = tx.from;
 
-            // 2. Perform the GraphQL check
-            const gqlResponse = await axios.post(EAS_GRAPHQL_ENDPOINT, {
-                query: GQL_QUERY,
-                variables: {
-                    recipient: userAddress,
-                    schemaId: SCHEMA_UID,
-                }
-            });
-
-            const attestations = gqlResponse.data.data.attestations;
-            const hasAttestation = attestations && attestations.length > 0;
-
-            // 3. If the user does NOT have the attestation, block them.
-            if (!hasAttestation) {
-                console.log(`Verification FAILED for address: ${userAddress}`);
-                return res.status(403).json({
-                    jsonrpc: '2.0',
-                    id,
-                    error: { code: -32602, message: 'Permission Denied: Address does not have the required attestation.' }
+            // 2. Perform the GraphQL check for Coinbase attestation
+            let hasCoinbaseAttestation = false;
+            try {
+                const gqlResponse = await axios.post(EAS_GRAPHQL_ENDPOINT, {
+                    query: GQL_QUERY,
+                    variables: {
+                        recipient: userAddress,
+                        schemaId: SCHEMA_UID,
+                    }
                 });
+                const attestations = gqlResponse.data.data.attestations;
+                if (attestations && attestations.length > 0) {
+                    hasCoinbaseAttestation = true;
+                }
+            } catch (gqlError) {
+                console.error("Coinbase attestation check failed:", gqlError);
+                // Don't block yet, continue to Binance check
             }
-            
-            console.log(`Verification SUCCEEDED for address: ${userAddress}`);
 
+
+            // 3. If no Coinbase attestation, check for Binance BAB token
+            if (hasCoinbaseAttestation) {
+                console.log(`Coinbase Verification SUCCEEDED for address: ${userAddress}`);
+            } else {
+                try {
+                    const provider = new ethers.JsonRpcProvider(BSC_RPC_ENDPOINT);
+                    const contract = new ethers.Contract(BAB_CONTRACT_ADDRESS, BAB_ABI, provider);
+                    const balance = await contract.balanceOf(userAddress);
+
+                    if (balance > 0) {
+                        console.log(`Binance Verification SUCCEEDED for address: ${userAddress}`);
+                    } else {
+                        console.log(`Verification FAILED for address: ${userAddress}`);
+                        return res.status(403).json({
+                            jsonrpc: '2.0',
+                            id,
+                            error: { code: -32602, message: 'Permission Denied: Address requires a valid Coinbase or Binance attestation.' }
+                        });
+                    }
+                } catch (binanceError) {
+                    console.error("Binance BAB token check failed:", binanceError);
+                    // If this check also fails, we must block the transaction.
+                    return res.status(500).json({
+                        jsonrpc: '2.0',
+                        id,
+                        error: { code: -32603, message: 'Internal error during Binance attestation check.' }
+                    });
+                }
+            }
         } catch (error) {
-            console.error("Attestation check failed:", error);
+            console.error("Attestation check process failed:", error);
             return res.status(500).json({
                 jsonrpc: '2.0',
                 id,
