@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDynamicContext, DynamicWidget } from '@dynamic-labs/sdk-react-core';
-import { ExternalLink, Wallet, Droplet, Trophy, BarChart3, CheckCircle, ShieldCheck, ArrowRight, ArrowRight as ArrowRightIcon, FileText, Beaker, Code, Network, Plus } from 'lucide-react';
+import { ExternalLink, Wallet, Droplet, Trophy, BarChart3, CheckCircle, ShieldCheck, ArrowRight, ArrowRight as ArrowRightIcon, FileText, Beaker, Code, Network, Plus, Activity } from 'lucide-react';
 import axios from 'axios';
 
 export const Dashboard: React.FC = () => {
@@ -69,17 +69,58 @@ export const Dashboard: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
             {/* Welcome Banner Tile */}
             <div className="col-span-1 sm:col-span-2 lg:col-span-3 bg-[#f0ebff] text-black relative overflow-hidden rounded-xl">
-              <div className="p-6 relative z-10">
-                <h2 className="text-2xl font-bold mb-3 flex items-center">
-                  <span className="mr-2">👋</span> Welcome to the Rayls Testnet
-                  Dashboard
-                </h2>
-                <p className="max-w-2xl mb-4">
-                  Rayls is a high-performance public & private EVM blockchain
-                  system built for RWA, with native compliance and governance
-                  controls. To use the Rayls Public Testnet you must have a
-                  valid attestation to your connected wallet address.
-                </p>
+              <div className="flex flex-col md:flex-row justify-between p-6">
+                {/* Welcome text section */}
+                <div className="md:max-w-[65%] mb-6 md:mb-0">
+                  <h2 className="text-2xl font-bold mb-3 flex items-center">
+                    <span className="mr-2">👋</span> Welcome to the Rayls Testnet
+                    Dashboard
+                  </h2>
+                  <p className="mb-4">
+                    Rayls is a high-performance public & private EVM blockchain
+                    system built for RWA, with native compliance and governance
+                    controls. To use the Rayls Public Testnet you must have a
+                    valid attestation to your connected wallet address.
+                  </p>
+                </div>
+                {/* Stats section */}
+                <div className="md:w-[30%] flex flex-col justify-center bg-white rounded-xl p-5 self-center">
+                  <a href="#" className="group">
+                    <h3 className="text-gray-600 text-sm font-medium mb-3 flex items-center">
+                      Testnet stats
+                      <ArrowRight
+                        size={14}
+                        className="ml-1 group-hover:translate-x-1 transition-transform"
+                      />
+                    </h3>
+                  </a>
+                  <div className="flex justify-between">
+                    {/* Total Wallets */}
+                    <div className="flex-1 mr-3">
+                      <div className="flex items-center mb-2">
+                        <div className="bg-[#e7fb3c]/30 p-2 rounded mr-2">
+                          <Wallet size={16} className="text-black" />
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          Total wallets
+                        </span>
+                      </div>
+                      <div className="text-xl font-bold text-black">12,593</div>
+                    </div>
+                    {/* Total Transactions */}
+                    <div className="flex-1">
+                      <div className="flex items-center mb-2">
+                        <div className="bg-[#b388ff]/30 p-2 rounded mr-2">
+                          <Activity size={16} className="text-black" />
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          Total transactions
+                        </span>
+                      </div>
+                      <div className="text-xl font-bold text-black">56,555</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             {/* Attestations Section */}
