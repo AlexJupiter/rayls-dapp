@@ -9,12 +9,34 @@ export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [attestationId, setAttestationId] = useState<string | null>(null);
   const [isLoadingAttestation, setIsLoadingAttestation] = useState(true);
+  const [stats, setStats] = useState({ totalWallets: '...', totalTransactions: '...' });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await axios.get('https://rayls-test-chain.explorer.caldera.xyz/api/v2/stats');
+        const data = response.data;
+        setStats({
+          totalWallets: parseInt(data.total_addresses).toLocaleString(),
+          totalTransactions: parseInt(data.total_transactions).toLocaleString()
+        });
+      } catch (error) {
+        console.error('Error fetching testnet stats:', error);
+        setStats({ totalWallets: 'N/A', totalTransactions: 'N/A' });
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   useEffect(() => {
     const checkAttestation = async () => {
@@ -85,7 +107,12 @@ export const Dashboard: React.FC = () => {
                 </div>
                 {/* Stats section */}
                 <div className="md:w-[30%] flex flex-col justify-center bg-white rounded-xl p-5 self-center">
-                  <a href="#" className="group">
+                  <a 
+                    href="https://portal.caldera.xyz/rayls-test-chain" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="group"
+                  >
                     <h3 className="text-gray-600 text-sm font-medium mb-3 flex items-center">
                       Testnet stats
                       <ArrowRight
@@ -105,7 +132,7 @@ export const Dashboard: React.FC = () => {
                           Total wallets
                         </span>
                       </div>
-                      <div className="text-xl font-bold text-black">12,593</div>
+                      <div className="text-xl font-bold text-black">{isLoadingStats ? '...' : stats.totalWallets}</div>
                     </div>
                     {/* Total Transactions */}
                     <div className="flex-1">
@@ -117,7 +144,7 @@ export const Dashboard: React.FC = () => {
                           Total transactions
                         </span>
                       </div>
-                      <div className="text-xl font-bold text-black">56,555</div>
+                      <div className="text-xl font-bold text-black">{isLoadingStats ? '...' : stats.totalTransactions}</div>
                     </div>
                   </div>
                 </div>
