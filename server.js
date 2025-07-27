@@ -43,6 +43,26 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'dist')));
 
 
+// --- API Endpoint for Binance BAB Token Check ---
+app.get('/api/check-bab-token/:address', async (req, res) => {
+    const { address } = req.params;
+    if (!ethers.isAddress(address)) {
+        return res.status(400).json({ error: 'Invalid Ethereum address' });
+    }
+
+    try {
+        const provider = new ethers.JsonRpcProvider(BSC_RPC_ENDPOINT);
+        const contract = new ethers.Contract(BAB_CONTRACT_ADDRESS, BAB_ABI, provider);
+        const balance = await contract.balanceOf(address);
+        
+        return res.json({ hasToken: balance > 0 });
+    } catch (error) {
+        console.error(`BAB token check failed for address ${address}:`, error);
+        return res.status(500).json({ error: 'Failed to check Binance attestation.' });
+    }
+});
+
+
 // --- RPC PROXY ENDPOINT ---
 app.post('/rpc', async (req, res) => {
     const { id, method, params } = req.body;

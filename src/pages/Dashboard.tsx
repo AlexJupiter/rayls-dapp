@@ -64,19 +64,15 @@ export const Dashboard: React.FC = () => {
             const attestationId = response.data.data.attestations[0].id;
             setCoinbaseAttestationId(attestationId);
 
-            // If Coinbase attestation is found, check for Binance BAB token
+            // If Coinbase attestation is found, check for Binance BAB token via our own API
             setIsLoadingBinance(true);
             try {
-              const provider = new ethers.JsonRpcProvider("https://bsc-dataseed.binance.org/");
-              const babContractAddress = "0x2b09d47d550061f995a3b5c6f0fd58005215d7c8";
-              const abi = ["function balanceOf(address owner) view returns (uint256)"];
-              const contract = new ethers.Contract(babContractAddress, abi, provider);
-              const balance = await contract.balanceOf(walletAddress);
-              if (balance > 0) {
+              const babResponse = await axios.get(`/api/check-bab-token/${walletAddress}`);
+              if (babResponse.data.hasToken) {
                 setHasBinanceAttestation(true);
               }
             } catch (binanceError) {
-              console.error('Error checking Binance BAB token:', binanceError);
+              console.error('Error checking Binance BAB token via proxy:', binanceError);
             }
           }
         } catch (error) {
