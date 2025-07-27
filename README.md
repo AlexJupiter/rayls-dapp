@@ -33,15 +33,18 @@ graph TD
         E["EAS GraphQL API (Base)"]
         F["Base Blockchain"]
         G["Rayls Testnet Blockchain"]
+        I["Caldera Explorer REST API"]
     end
 
     A -- "Authentication" --> C;
     A -- "Queries for attestation<br/>to display in UI" --> E;
+    A -- "Fetches testnet stats" --> I;
     H -- "RPC Requests" --> B;
     B -- "Forwards requests" --> D;
     D -- "Interacts with" --> G;
     B -- "Validates transactions against" --> E;
     E -- "Reads from" --> F;
+    I -- "Reads from" --> G;
 ```
 
 ## Getting Started
