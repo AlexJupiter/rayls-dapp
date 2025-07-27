@@ -1,5 +1,9 @@
 # Rayls Testnet DApp
 
+**Official Production Builds:**
+- **DApp**: [https://rayls-dapp-3nfhj.ondigitalocean.app/](https://rayls-dapp-3nfhj.ondigitalocean.app/)
+- **Proxy RPC**: [https://rayls-dapp-3nfhj.ondigitalocean.app/rpc](https://rayls-dapp-3nfhj.ondigitalocean.app/rpc)
+
 This project is a decentralized application (dApp) built for the Rayls Testnet. It provides a user-friendly interface for connecting a wallet, viewing onchain attestations, and interacting with the Rayls network.
 
 The dApp features a custom RPC Proxy Server that acts as a gatekeeper for transactions. It checks for a specific onchain attestation (Coinbase Verified Account) before allowing any transactions to be sent to the network, while still permitting read-only requests like checking balances.
