@@ -44,7 +44,7 @@ graph TD
 
     A -- "Authentication" --> C;
     A -- "Queries for Coinbase attestation<br/>to display in UI" --> E;
-    A -- "Checks for BAB Token<br/>to display in UI" --> J
+    A -- "Checks for BAB Token via API call" --> B
     A -- "Fetches testnet stats" --> I;
     H -- "RPC Requests" --> B;
     B -- "Forwards requests" --> D;
