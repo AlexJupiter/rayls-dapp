@@ -1,5 +1,7 @@
 # Rayls Testnet DApp
 
+![Rayls Testnet Dashboard Screenshot](/public/rayls-dashboard-screenshot.png)
+
 **Official Production Builds:**
 - **DApp**: [https://rayls-dapp-3nfhj.ondigitalocean.app/](https://rayls-dapp-3nfhj.ondigitalocean.app/)
 - **Proxy RPC**: [https://rayls-dapp-3nfhj.ondigitalocean.app/rpc](https://rayls-dapp-3nfhj.ondigitalocean.app/rpc)
@@ -28,7 +30,7 @@ graph TD
     end
 
     subgraph "Backend Services"
-        B["RPC Proxy Server (Express)"]
+        B["Backend Server (Express)<br/>Handles RPC Proxy & API"]
     end
 
     subgraph "External Services"
@@ -82,37 +84,37 @@ graph TD
 
 ## Running the Application
 
-This project consists of two main parts: the frontend dApp and the backend RPC proxy. You will need to run both in separate terminal windows to use the full application.
+This project runs as two separate processes for local development: the frontend development server and the backend server.
 
 ### 1. Running the Frontend DApp
 
-The frontend is a Vite-powered React application. To start the development server:
+The frontend is a Vite-powered React application. To start the development server, which provides features like Hot-Module-Replacement:
 
 ```bash
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173`. The server will automatically reload when you make changes to the code.
+The application will be available at `http://localhost:5173` (or the next available port).
 
-### 2. Running the RPC Proxy Server
+### 2. Running the Backend Server
 
-The RPC Proxy is an Express server that handles requests to the blockchain. To start the proxy server:
+The backend is an Express server that serves the API, proxies RPC requests, and will serve the static frontend files in production. To start the backend server:
 
 ```bash
-npm run start:proxy
+npm start
 ```
 
-The proxy server will run on `http://localhost:3001/rpc`.
+The backend server will run on `http://localhost:8080`.
 
 ## Adding the Proxy to MetaMask
 
-To use the attestation-gated transaction feature, you need to add the local proxy as a custom network in MetaMask.
+To use the attestation-gated transaction feature with your local development setup, you need to add the local backend server as a custom network in MetaMask.
 
 1.  Open MetaMask and click on the network selection dropdown.
 2.  Click **Add network** and then select **Add a network manually**.
 3.  Fill in the network details:
-    *   **Network Name**: Rayls Testnet Proxy (or any name you prefer)
-    *   **New RPC URL**: `http://localhost:3001/rpc`
+    *   **Network Name**: Rayls Testnet (Local)
+    *   **New RPC URL**: `http://localhost:8080/rpc`
     *   **Chain ID**: 1632025
     *   **Currency Symbol**: ETH
     *   **Block Explorer URL**: `https://rayls-test-chain.explorer.caldera.xyz/`
