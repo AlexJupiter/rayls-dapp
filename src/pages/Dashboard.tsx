@@ -310,6 +310,52 @@ export const Dashboard: React.FC = () => {
                 <ArrowRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
               </div>
             </a>
+            {/* Tile 7: Bridge Funds */}
+            <a
+              href="#"
+              className="group bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(179,136,255,0.3)]"
+            >
+              <div className="flex items-center mb-4">
+                <div className="bg-[#b388ff]/30 p-4 rounded-lg mr-3 group-hover:bg-[#b388ff]/40 transition-colors">
+                  <Network size={24} className="text-[#b388ff]" />
+                </div>
+                <h3 className="font-semibold text-lg">Bridge funds</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-4">
+                Transfer tokens between Rayls Testnet and other blockchain
+                networks
+              </p>
+              <div className="mt-auto flex items-center text-black text-sm font-medium">
+                Bridge assets{' '}
+                <ArrowRight
+                  size={14}
+                  className="ml-1 group-hover:translate-x-1 transition-transform"
+                />
+              </div>
+            </a>
+            {/* Tile 8: Check Status */}
+            <a
+              href="#"
+              className="group bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(231,251,60,0.3)]"
+            >
+              <div className="flex items-center mb-4">
+                <div className="bg-[#e7fb3c]/30 p-4 rounded-lg mr-3 group-hover:bg-[#e7fb3c]/40 transition-colors">
+                  <CheckCircle size={24} className="text-black" />
+                </div>
+                <h3 className="font-semibold text-lg">Check status</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-4">
+                Monitor the status of your pending transactions and bridge
+                operations
+              </p>
+              <div className="mt-auto flex items-center text-black text-sm font-medium">
+                View status{' '}
+                <ArrowRight
+                  size={14}
+                  className="ml-1 group-hover:translate-x-1 transition-transform"
+                />
+              </div>
+            </a>
           </div>
         </div>
       </div>
