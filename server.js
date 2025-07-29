@@ -6,7 +6,7 @@ import { ethers } from 'ethers';
 import axios from 'axios';
 
 // --- CONFIGURATION ---
-const CALDERA_RPC_ENDPOINT = 'https://rayls-test-chain.rpc.caldera.xyz/http';
+const STATIC_IP_PROXY_ENDPOINT = 'http://159.223.246.173/';
 const EAS_GRAPHQL_ENDPOINT = 'https://base.easscan.org/graphql';
 const SCHEMA_UID = '0xf8b05c79f090979bf4a80270aba232dff11a10d9ca55c4f88de95317970f0de9';
 const GQL_QUERY = `
@@ -135,7 +135,7 @@ app.post('/rpc', async (req, res) => {
 
     // --- FORWARD THE REQUEST ---
     try {
-        const response = await axios.post(CALDERA_RPC_ENDPOINT, req.body);
+        const response = await axios.post(STATIC_IP_PROXY_ENDPOINT, req.body);
         return res.status(response.status).json(response.data);
     } catch (error) {
         console.error("RPC Proxy failed:", error);

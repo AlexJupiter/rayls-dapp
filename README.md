@@ -33,6 +33,10 @@ graph TD
         B["Backend Server (Express)<br/>Handles RPC Proxy & API"]
     end
 
+    subgraph "Your Digital Ocean Droplet"
+        P["Static IP Proxy<br/>(Nginx)"]
+    end
+
     subgraph "External Services"
         C["Dynamic.xyz"]
         D["Caldera RPC"]
@@ -49,7 +53,8 @@ graph TD
     A -- "Checks for BAB Token via API call" --> B
     A -- "Fetches testnet stats" --> I;
     H -- "RPC Requests" --> B;
-    B -- "Forwards requests" --> D;
+    B -- "Forwards requests" --> P;
+    P -- "Forwards requests to" --> D;
     D -- "Interacts with" --> G;
     B -- "Validates transactions against" --> E;
     B -- "If Coinbase fails, checks BAB token via" --> J
