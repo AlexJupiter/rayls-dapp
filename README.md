@@ -29,12 +29,11 @@ graph TD
         H["Wallet (e.g. MetaMask)"]
     end
 
-    subgraph "Backend Services"
-        B["Backend Server (Express)<br/>Handles RPC Proxy & API"]
-    end
-
-    subgraph "Your Digital Ocean Droplet"
-        P["Static IP Proxy<br/>(Nginx)"]
+    subgraph "Digital Ocean Infrastructure"
+        subgraph "VPC (Private Network)"
+            B["Backend Server (App Platform)<br/>Handles RPC Proxy & API"]
+            P["Static IP Proxy (Droplet)<br/>(Nginx)"]
+        end
     end
 
     subgraph "External Services"
@@ -53,7 +52,7 @@ graph TD
     A -- "Checks for BAB Token via API call" --> B
     A -- "Fetches testnet stats" --> I;
     H -- "RPC Requests" --> B;
-    B -- "Forwards requests" --> P;
+    B -- "Forwards requests via private IP" --> P;
     P -- "Forwards requests to" --> D;
     D -- "Interacts with" --> G;
     B -- "Validates transactions against" --> E;

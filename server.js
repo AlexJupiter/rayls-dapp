@@ -6,7 +6,7 @@ import { ethers } from 'ethers';
 import axios from 'axios';
 
 // --- CONFIGURATION ---
-const STATIC_IP_PROXY_ENDPOINT = 'http://159.223.246.173/';
+const STATIC_IP_PROXY_ENDPOINT = 'http://10.106.0.2/';
 const EAS_GRAPHQL_ENDPOINT = 'https://base.easscan.org/graphql';
 const SCHEMA_UID = '0xf8b05c79f090979bf4a80270aba232dff11a10d9ca55c4f88de95317970f0de9';
 const GQL_QUERY = `
