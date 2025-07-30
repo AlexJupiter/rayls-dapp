@@ -3,8 +3,8 @@
 ![Rayls Testnet Dashboard Screenshot](/public/rayls-dashboard-screenshot.png)
 
 **Official Production Builds:**
-- **DApp**: [https://rayls-dapp-3nfhj.ondigitalocean.app/](https://rayls-dapp-3nfhj.ondigitalocean.app/)
-- **Proxy RPC**: [https://rayls-dapp-3nfhj.ondigitalocean.app/rpc](https://rayls-dapp-3nfhj.ondigitalocean.app/rpc)
+- **DApp**: [https://dapp.rayls.com/](https://dapp.rayls.com/)
+- **Proxy RPC**: [https://dapp.rayls.com/rpc](https://dapp.rayls.com/rpc)
 
 This project is a decentralized application (dApp) built for the Rayls Testnet. It provides a user-friendly interface for connecting a wallet, viewing onchain attestations, and interacting with the Rayls network.
 
@@ -19,6 +19,8 @@ The dApp features a custom RPC Proxy Server that acts as a gatekeeper for transa
 
 ## Technical Architecture
 
+**Note:** The following diagram shows the current architecture. The final intended state is to place the Backend Server and the Static IP Proxy into a VPC for secure, private communication. This is pending a feature enablement from Digital Ocean support.
+
 ```mermaid
 graph TD
     subgraph "User"
@@ -30,10 +32,8 @@ graph TD
     end
 
     subgraph "Digital Ocean Infrastructure"
-        subgraph "VPC (Private Network)"
-            B["Backend Server (App Platform)<br/>Handles RPC Proxy & API"]
-            P["Static IP Proxy (Droplet)<br/>(Nginx)"]
-        end
+        B["Backend Server (App Platform)<br/>Handles RPC Proxy & API"]
+        P["Static IP Proxy (Droplet)<br/>(Nginx)"]
     end
 
     subgraph "External Services"
@@ -52,7 +52,7 @@ graph TD
     A -- "Checks for BAB Token via API call" --> B
     A -- "Fetches testnet stats" --> I;
     H -- "RPC Requests" --> B;
-    B -- "Forwards requests via private IP" --> P;
+    B -- "Forwards requests via Public IP" --> P;
     P -- "Forwards requests to" --> D;
     D -- "Interacts with" --> G;
     B -- "Validates transactions against" --> E;
