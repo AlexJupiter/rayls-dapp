@@ -31,7 +31,7 @@ graph TD
         H["Wallet (e.g. MetaMask)"]
     end
 
-    subgraph "Digital Ocean Infrastructure"
+    subgraph "Digital&nbsp;Ocean&nbsp;Infrastructure"
         B["Backend Server (App Platform)<br/>Handles RPC Proxy & API"]
         P["Static IP Proxy (Droplet)<br/>(Nginx)"]
     end
