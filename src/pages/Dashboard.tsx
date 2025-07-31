@@ -332,10 +332,13 @@ export const Dashboard: React.FC = () => {
                   href="https://dash.readme.com/project/parfin-rayls/v2.3.1/docs/rayls-testnet-attestations"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-black hover:text-gray-800 font-medium py-2 px-4 rounded-lg inline-flex items-center transition-colors text-sm border border-black hover:border-gray-800"
+                  className="group mt-6 inline-flex items-center rounded-lg border border-black py-2 px-4 text-sm font-medium text-black transition-colors hover:border-gray-800 hover:text-gray-800"
                 >
-                  <ExternalLink size={16} className="mr-2" />
                   Learn more about attestations
+                  <ArrowRight
+                    size={16}
+                    className="ml-2 transition-transform group-hover:translate-x-1"
+                  />
                 </a>
               </div>
             </div>
