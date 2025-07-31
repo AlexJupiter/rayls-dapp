@@ -18,6 +18,7 @@ import {
   FileText,
   Network,
   CheckCircle,
+  Layers,
 } from 'lucide-react';
 import axios from 'axios';
 import { ethers } from "ethers";
@@ -361,7 +362,7 @@ export const Dashboard: React.FC = () => {
             </div>
             {/* Action Tiles */}
             {/* Tile 1: Block Explorer */}
-            <a href="#" className="group bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(179,136,255,0.3)]">
+            <a href="https://rayls-test-chain.explorer.caldera.xyz/" target="_blank" className="group bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(179,136,255,0.3)]">
               <div className="flex items-center mb-4">
                 <div className="bg-[#b388ff]/30 p-4 rounded-lg mr-3 group-hover:bg-[#b388ff]/40 transition-colors">
                   <ExternalLink size={24} className="text-[#b388ff]" />
@@ -378,7 +379,12 @@ export const Dashboard: React.FC = () => {
               </div>
             </a>
             {/* Tile 2: Faucet */}
-            <a href="#" className="group bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(231,251,60,0.3)]">
+            <a
+              href="https://rayls-test-chain.hub.caldera.xyz/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-white text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(231,251,60,0.3)]"
+            >
               <div className="flex items-center mb-4">
                 <div className="bg-[#e7fb3c]/30 p-4 rounded-lg mr-3 group-hover:bg-[#e7fb3c]/40 transition-colors">
                   <Droplet size={24} className="text-black" />
@@ -412,7 +418,12 @@ export const Dashboard: React.FC = () => {
               </div>
             </a>
             {/* Tile 4: Quests */}
-            <a href="#" className="group bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(231,251,60,0.3)]">
+            <a
+              href="https://app.galxe.com/quest/degf5vaoivxjsc6t7KimCy?sort=Trending"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-white text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(231,251,60,0.3)]"
+            >
               <div className="flex items-center mb-4">
                 <div className="bg-[#e7fb3c]/30 p-4 rounded-lg mr-3 group-hover:bg-[#e7fb3c]/40 transition-colors">
                   <Trophy size={24} className="text-black" />
@@ -427,8 +438,14 @@ export const Dashboard: React.FC = () => {
                 <ArrowRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
               </div>
             </a>
-            {/* Tile 5: Leaderboard */}
-            <a href="#" className="group bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(231,251,60,0.3)]">
+
+            {/* View Rayls leaderboard */}
+            <a
+              href="https://app.fuul.xyz/incentives/rayls-demo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(179,136,255,0.3)]"
+            >
               <div className="flex items-center mb-4">
                 <div className="bg-[#b388ff]/30 p-4 rounded-lg mr-3 group-hover:bg-[#b388ff]/40 transition-colors">
                   <BarChart3 size={24} className="text-[#b388ff]" />
@@ -446,7 +463,12 @@ export const Dashboard: React.FC = () => {
               </div>
             </a>
             {/* Tile 6: Technical Docs - Updated with yellow background */}
-            <a href="#" className="group bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(231,251,60,0.3)]">
+            <a
+              href="https://docs.rayls.com/docs/a-warm-introduction-to-rayls"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-white text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(231,251,60,0.3)]"
+            >
               <div className="flex items-center mb-4">
                 <div className="bg-[#e7fb3c]/30 p-4 rounded-lg mr-3 group-hover:bg-[#e7fb3c]/40 transition-colors">
                   <FileText size={24} className="text-black" />
@@ -462,9 +484,11 @@ export const Dashboard: React.FC = () => {
                 <ArrowRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
               </div>
             </a>
-            {/* Tile 7: Bridge Funds */}
+            {/* Bridge funds */}
             <a
-              href="#"
+              href="https://rayls-test-chain.bridge.caldera.xyz/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="group bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(179,136,255,0.3)]"
             >
               <div className="flex items-center mb-4">
@@ -485,14 +509,16 @@ export const Dashboard: React.FC = () => {
                 />
               </div>
             </a>
-            {/* Tile 8: Check Status */}
+            {/* Check status */}
             <a
-              href="#"
-              className="group bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(231,251,60,0.3)]"
+              href="https://rayls-test-chain.bridge.caldera.xyz/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-white text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(231,251,60,0.3)]"
             >
               <div className="flex items-center mb-4">
                 <div className="bg-[#e7fb3c]/30 p-4 rounded-lg mr-3 group-hover:bg-[#e7fb3c]/40 transition-colors">
-                  <CheckCircle size={24} className="text-black" />
+                  <Activity size={24} className="text-black" />
                 </div>
                 <h3 className="font-semibold text-lg">Check status</h3>
               </div>
