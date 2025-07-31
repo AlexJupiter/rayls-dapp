@@ -44,7 +44,9 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'dist')));
 
 
-// --- API Endpoint for Binance BAB Token Check ---
+// --- API Endpoints ---
+
+// Endpoint for the frontend to check for the Binance BAB token
 app.get('/api/check-bab-token/:address', async (req, res) => {
     const { address } = req.params;
     if (!ethers.isAddress(address)) {
@@ -58,13 +60,14 @@ app.get('/api/check-bab-token/:address', async (req, res) => {
         
         return res.json({ hasToken: balance > 0 });
     } catch (error) {
-        console.error(`BAB token check failed for address ${address}:`, error);
-        return res.status(500).json({ error: 'Failed to check Binance attestation.' });
+        console.error('Error checking BAB token balance:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 
-// --- RPC PROXY ENDPOINT ---
+// --- RPC Proxy Logic ---
+
 app.post('/rpc', async (req, res) => {
     const { id, method, params } = req.body;
 

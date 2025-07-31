@@ -28,8 +28,10 @@ export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [coinbaseAttestationId, setCoinbaseAttestationId] = useState<string | null>(null);
   const [hasBinanceAttestation, setHasBinanceAttestation] = useState(false);
+  const [hasGalxePassport, setHasGalxePassport] = useState(false);
   const [isLoadingAttestation, setIsLoadingAttestation] = useState(true);
   const [isLoadingBinance, setIsLoadingBinance] = useState(true);
+  const [isLoadingGalxe, setIsLoadingGalxe] = useState(true);
   const [stats, setStats] = useState({ totalWallets: '...', totalTransactions: '...' });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
@@ -105,7 +107,32 @@ export const Dashboard: React.FC = () => {
       }
     };
 
+    const checkGalxePassport = async () => {
+      if (primaryWallet) {
+        const walletAddress = primaryWallet.address;
+        setIsLoadingGalxe(true);
+        try {
+          const provider = new ethers.JsonRpcProvider("https://bsc-dataseed.binance.org/");
+          const nftContractAddress = "0xe84050261cb0a35982ea0f6f3d9dff4b8ed3c012";
+          const abi = [
+            "function balanceOf(address owner) view returns (uint256)"
+          ];
+          const contract = new ethers.Contract(nftContractAddress, abi, provider);
+          const balance = await contract.balanceOf(walletAddress);
+          
+          if (balance > 0) {
+            setHasGalxePassport(true);
+          }
+        } catch (error) {
+          console.error('Error checking Galxe Passport:', error);
+        } finally {
+          setIsLoadingGalxe(false);
+        }
+      }
+    };
+
     checkAttestations();
+    checkGalxePassport();
   }, [user, primaryWallet]);
 
   if (!isAuthenticated || !user) {
@@ -331,20 +358,105 @@ export const Dashboard: React.FC = () => {
                         </div>
                       </a>
                     )}
+
+                    {isLoadingGalxe ? (
+                      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+                        <p className="text-gray-600">Checking for Galxe Passport...</p>
+                      </div>
+                    ) : hasGalxePassport && (
+                      <a
+                        href="#"
+                        className="group bg-white border border-gray-200 rounded-lg p-5 hover:bg-white/90 transition-colors shadow-sm block hover:shadow-[0_0_15px_rgba(179,136,255,0.3)] transition-all duration-300"
+                      >
+                        <div className="flex flex-col md:flex-row md:items-start">
+                          {/* Logo and title section - keep together in responsive */}
+                          <div className="flex items-start mb-2 md:mb-0">
+                            <div className="mr-4 flex-shrink-0">
+                              <svg width="1096" height="1096" viewBox="0 0 1096 1096" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+                                <rect width="1096" height="1096" rx="548" fill="url(#paint0_linear_2701_30678)"/>
+                                <path d="M691.763 366.29L225.969 634.955L658.722 315.898C673.226 305.21 693.808 309.504 702.802 325.091C711.133 339.524 706.191 357.967 691.744 366.309L691.763 366.29ZM758.319 598.806C752.07 587.987 738.229 584.298 727.398 590.54L419.027 768.389L747.45 630.964C760.023 625.705 765.116 610.61 758.3 598.806H758.319ZM913.905 360.388C900.859 337.821 871.492 330.841 849.679 345.123L176 786L895.027 423.587C918.317 411.84 926.951 382.955 913.905 360.388Z" fill="white"/>
+                                <defs>
+                                <linearGradient id="paint0_linear_2701_30678" x1="141.904" y1="1096" x2="942.115" y2="-2.13521e-05" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#3B42FF"/>
+                                <stop offset="0.595655"/>
+                                </linearGradient>
+                                </defs>
+                              </svg>
+                            </div>
+                            <div className="flex-1 md:hidden">
+                              <h3 className="font-semibold text-lg">
+                                Galxe Passport
+                              </h3>
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1 hidden md:flex">
+                              <h3 className="font-semibold text-lg mr-2">
+                                Galxe Passport
+                              </h3>
+                            </div>
+                            <p className="text-gray-600 text-sm mb-2">
+                              You've claimed the Galxe Passport NFT as part of an
+                              identity verification process with Sumsub.
+                            </p>
+                            <p className="text-gray-500 text-xs mb-3">
+                              This is a proof of personhood attestation with no link
+                              between your identity and your wallet, meaning it
+                              allows you to only trade some of the assets on Rayls.
+                            </p>
+                            {/* Stats section - shows inline on mobile, to the right on desktop */}
+                            <div className="mb-4 md:hidden">
+                              <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg inline-flex items-center">
+                                <Users size={16} className="text-[#b388ff] mr-2" />
+                                <p className="text-xs text-gray-600">
+                                  Over 1M accounts have this attestation
+                                </p>
+                              </div>
+                            </div>
+                            {/* Verify onchain and More info buttons */}
+                            <div className="mt-4 flex items-center space-x-6">
+                              <a
+                                href="#"
+                                className="group flex items-center text-black text-sm font-medium"
+                              >
+                                Verify onchain{' '}
+                                <ArrowRight
+                                  size={14}
+                                  className="ml-1 group-hover:translate-x-1 transition-transform"
+                                />
+                              </a>
+                            </div>
+                          </div>
+                          {/* Stats section - hidden on mobile, shown on desktop */}
+                          <div className="hidden md:flex md:items-center md:ml-4">
+                            <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg flex items-center">
+                              <Users size={16} className="text-[#b388ff] mr-2" />
+                              <p className="text-xs text-gray-600 whitespace-nowrap">
+                                Over 1M accounts
+                                <br />
+                                have this attestation
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </a>
+                    )}
                   </div>
                 ) : (
-                  <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-                    <p className="text-gray-600 mb-6">
-                      You currently have no attestations to your connected
-                      wallet address to enable you to transact on Rayls
-                    </p>
-                    <button className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center mx-auto transition-colors">
-                      <Plus size={18} className="mr-2" />
-                      Create attestation
-                    </button>
-                  </div>
+                  !isLoadingGalxe && !hasGalxePassport && (
+                    <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+                      <p className="text-gray-600 mb-6">
+                        You currently have no attestations to your connected
+                        wallet address to enable you to transact on Rayls
+                      </p>
+                      <button className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center mx-auto transition-colors">
+                        <Plus size={18} className="mr-2" />
+                        Create attestation
+                      </button>
+                    </div>
+                  )
                 )}
-                
+
                 {/* Learn more about attestations link */}
                 <a
                   href="https://dash.readme.com/project/parfin-rayls/v2.3.1/docs/rayls-testnet-attestations"
