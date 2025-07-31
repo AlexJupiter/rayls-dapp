@@ -1,6 +1,6 @@
 # Rayls Testnet DApp
 
-![Rayls Testnet Dashboard Screenshot](/public/rayls-dashboard-screenshot.png)
+![Rayls Testnet Dashboard Screenshot](public/dashboardscreenshotwithglax.png)
 
 **Official Production Builds:**
 - **DApp**: [https://dapp.rayls.com/](https://dapp.rayls.com/)
@@ -45,11 +45,13 @@ graph TD
         I["Caldera Explorer REST API"]
         J["Binance Smart Chain RPC"]
         K["BAB Token Contract (BSC)"]
+        L["Galxe Passport NFT Contract (BSC)"]
     end
 
     A -- "Authentication" --> C;
     A -- "Queries for Coinbase attestation<br/>to display in UI" --> E;
     A -- "Checks for BAB Token via API call" --> B
+    A -- "Checks for Galxe Passport" --> J
     A -- "Fetches testnet stats" --> I;
     H -- "RPC Requests" --> B;
     B -- "Forwards requests via Public IP" --> P;
@@ -57,9 +59,11 @@ graph TD
     D -- "Interacts with" --> G;
     B -- "Validates transactions against" --> E;
     B -- "If Coinbase fails, checks BAB token via" --> J
+    B -- "If Binance fails, checks Galxe Passport via" --> J
     E -- "Reads from" --> F;
     I -- "Reads from" --> G;
     J -- "Reads from" --> K;
+    J -- "Reads from" --> L;
 ```
 
 ## Getting Started
