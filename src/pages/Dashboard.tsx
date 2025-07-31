@@ -1,7 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDynamicContext, DynamicWidget } from '@dynamic-labs/sdk-react-core';
-import { ExternalLink, Wallet, Droplet, Trophy, BarChart3, CheckCircle, ShieldCheck, ArrowRight, ArrowRight as ArrowRightIcon, FileText, Beaker, Code, Network, Plus, Activity, Users } from 'lucide-react';
+import {
+  ArrowRight,
+  BadgeCheck,
+  ChevronDown,
+  ExternalLink,
+  Github,
+  Users,
+  Wallet,
+  Activity,
+  ShieldCheck,
+  Plus,
+  Droplet,
+  Trophy,
+  BarChart3,
+  FileText,
+  Network,
+  CheckCircle,
+} from 'lucide-react';
 import axios from 'axios';
 import { ethers } from "ethers";
 
@@ -485,6 +502,30 @@ export const Dashboard: React.FC = () => {
               </p>
               <div className="mt-auto flex items-center text-black text-sm font-medium">
                 View status{' '}
+                <ArrowRight
+                  size={14}
+                  className="ml-1 group-hover:translate-x-1 transition-transform"
+                />
+              </div>
+            </a>
+            {/* View our code */}
+            <a
+              href="https://github.com/AlexJupiter/rayls-dapp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-6 flex flex-col transition-all duration-300 hover:shadow-[0_0_15px_rgba(179,136,255,0.3)]"
+            >
+              <div className="flex items-center mb-4">
+                <div className="bg-[#b388ff]/30 p-4 rounded-lg mr-3 group-hover:bg-[#b388ff]/40 transition-colors">
+                  <Github size={24} className="text-[#b388ff]" />
+                </div>
+                <h3 className="font-semibold text-lg">View our code</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-4">
+                Explore our code on GitHub to check our security and collaborate
+              </p>
+              <div className="mt-auto flex items-center text-black text-sm font-medium">
+                View code{' '}
                 <ArrowRight
                   size={14}
                   className="ml-1 group-hover:translate-x-1 transition-transform"
