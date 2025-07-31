@@ -57,9 +57,17 @@ graph TD
     B -- "Forwards requests via Public IP" --> P;
     P -- "Forwards requests to" --> D;
     D -- "Interacts with" --> G;
-    B -- "Validates transactions against" --> E;
-    B -- "If Coinbase fails, checks BAB token via" --> J
-    B -- "If Binance fails, checks Galxe Passport via" --> J
+    
+    subgraph "Validation Flow"
+      direction LR
+      B -- "1. Coinbase Check" --> E
+      E -- "If fails, fallback to" --> J_CHECKS
+      J_CHECKS["2. Binance & Galxe Checks"]
+    end
+
+    J_CHECKS -- "Check BAB Token" --> J
+    J_CHECKS -- "Check Galxe Passport" --> J
+
     E -- "Reads from" --> F;
     I -- "Reads from" --> G;
     J -- "Reads from" --> K;
