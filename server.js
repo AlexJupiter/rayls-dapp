@@ -31,6 +31,11 @@ const BAB_CONTRACT_ADDRESS = "0x2b09d47d550061f995a3b5c6f0fd58005215d7c8";
 const BAB_ABI = ["function balanceOf(address owner) view returns (uint256)"];
 const BSC_RPC_ENDPOINT = "https://bsc-dataseed.binance.org/";
 
+const GALXE_PASSPORT_CONTRACT_ADDRESS = "0xe84050261cb0a35982ea0f6f3d9dff4b8ed3c012";
+const GALXE_PASSPORT_ABI = [
+  "function balanceOf(address owner) view returns (uint256)"
+];
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,6 +48,31 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'dist')));
 
+
+// --- Helper Functions ---
+async function checkBinanceAttestation(address) {
+  try {
+    const provider = new ethers.JsonRpcProvider(BSC_RPC_ENDPOINT);
+    const contract = new ethers.Contract(BAB_CONTRACT_ADDRESS, BAB_ABI, provider);
+    const balance = await contract.balanceOf(address);
+    return balance > 0;
+  } catch (error) {
+    console.error(`BAB token check failed for address ${address}:`, error);
+    return false;
+  }
+}
+
+async function checkGalxePassport(address) {
+  try {
+    const provider = new ethers.JsonRpcProvider(BSC_RPC_ENDPOINT);
+    const contract = new ethers.Contract(GALXE_PASSPORT_CONTRACT_ADDRESS, GALXE_PASSPORT_ABI, provider);
+    const balance = await contract.balanceOf(address);
+    return balance > 0;
+  } catch (error) {
+    console.error(`Galxe Passport check failed for address ${address}:`, error);
+    return false;
+  }
+}
 
 // --- API Endpoints ---
 
@@ -98,37 +128,31 @@ app.post('/rpc', async (req, res) => {
             }
 
 
-            // 3. If no Coinbase attestation, check for Binance BAB token
-            if (hasCoinbaseAttestation) {
-                console.log(`Coinbase Verification SUCCEEDED for address: ${userAddress}`);
-            } else {
-                try {
-                    const provider = new ethers.JsonRpcProvider(BSC_RPC_ENDPOINT);
-                    const contract = new ethers.Contract(BAB_CONTRACT_ADDRESS, BAB_ABI, provider);
-                    const balance = await contract.balanceOf(userAddress);
-
-                    if (balance > 0) {
-                        console.log(`Binance Verification SUCCEEDED for address: ${userAddress}`);
-                    } else {
-                        console.log(`Verification FAILED for address: ${userAddress}`);
-                        return res.status(403).json({
-                            jsonrpc: '2.0',
-                            id,
-                            error: { code: -32602, message: 'Permission Denied: Address requires a valid Coinbase or Binance attestation.' }
-                        });
+            // 3. If Coinbase attestation is missing, check for Binance BAB token
+            if (!hasCoinbaseAttestation) {
+              console.log(`Coinbase attestation not found for ${userAddress}. Checking for Binance attestation...`);
+              const hasBinance = await checkBinanceAttestation(userAddress);
+              if (!hasBinance) {
+                console.log(`Binance attestation not found for ${userAddress}. Checking for Galxe Passport...`);
+                const hasGalxe = await checkGalxePassport(userAddress);
+                if (!hasGalxe) {
+                  console.log(`Verification FAILED for address: ${userAddress}. No valid attestation found.`);
+                  return res.json({
+                    jsonrpc: '2.0',
+                    id,
+                    error: {
+                      code: -32602,
+                      message: 'Permission Denied: Address does not have the required attestation.'
                     }
-                } catch (binanceError) {
-                    console.error("Binance BAB token check failed:", binanceError);
-                    // If this check also fails, we must block the transaction.
-                    return res.status(500).json({
-                        jsonrpc: '2.0',
-                        id,
-                        error: { code: -32603, message: 'Internal error during Binance attestation check.' }
-                    });
+                  });
                 }
+              }
             }
-        } catch (error) {
-            console.error("Attestation check process failed:", error);
+            
+            console.log(`Verification SUCCEEDED for address: ${userAddress}`);
+            
+          } catch (error) {
+            console.error("Attestation check failed:", error);
             return res.status(500).json({
                 jsonrpc: '2.0',
                 id,
