@@ -364,10 +364,7 @@ export const Dashboard: React.FC = () => {
                         <p className="text-gray-600">Checking for Galxe Passport...</p>
                       </div>
                     ) : hasGalxePassport && (
-                      <a
-                        href="#"
-                        className="group bg-white border border-gray-200 rounded-lg p-5 hover:bg-white/90 transition-colors shadow-sm block hover:shadow-[0_0_15px_rgba(179,136,255,0.3)] transition-all duration-300"
-                      >
+                      <div className="group bg-white border border-gray-200 rounded-lg p-5 shadow-sm block transition-all duration-300">
                         <div className="flex flex-col md:flex-row md:items-start">
                           {/* Logo and title section - keep together in responsive */}
                           <div className="flex items-start mb-2 md:mb-0">
@@ -416,7 +413,9 @@ export const Dashboard: React.FC = () => {
                             {/* Verify onchain and More info buttons */}
                             <div className="mt-4 flex items-center space-x-6">
                               <a
-                                href="#"
+                                href={`https://bscscan.com/token/0xe84050261cb0a35982ea0f6f3d9dff4b8ed3c012?a=${primaryWallet?.address}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="group flex items-center text-black text-sm font-medium"
                               >
                                 Verify onchain{' '}
@@ -439,7 +438,7 @@ export const Dashboard: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                      </a>
+                      </div>
                     )}
                   </div>
                 ) : (
