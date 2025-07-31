@@ -326,6 +326,17 @@ export const Dashboard: React.FC = () => {
                     </button>
                   </div>
                 )}
+                
+                {/* Learn more about attestations link */}
+                <a
+                  href="https://dash.readme.com/project/parfin-rayls/v2.3.1/docs/rayls-testnet-attestations"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-black hover:text-gray-800 font-medium py-2 px-4 rounded-lg inline-flex items-center transition-colors text-sm border border-black hover:border-gray-800"
+                >
+                  <ExternalLink size={16} className="mr-2" />
+                  Learn more about attestations
+                </a>
               </div>
             </div>
             {/* Action Tiles */}
