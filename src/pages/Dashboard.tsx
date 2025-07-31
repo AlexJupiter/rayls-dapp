@@ -112,15 +112,8 @@ export const Dashboard: React.FC = () => {
         const walletAddress = primaryWallet.address;
         setIsLoadingGalxe(true);
         try {
-          const provider = new ethers.JsonRpcProvider("https://bsc-dataseed.binance.org/");
-          const nftContractAddress = "0xe84050261cb0a35982ea0f6f3d9dff4b8ed3c012";
-          const abi = [
-            "function balanceOf(address owner) view returns (uint256)"
-          ];
-          const contract = new ethers.Contract(nftContractAddress, abi, provider);
-          const balance = await contract.balanceOf(walletAddress);
-          
-          if (balance > 0) {
+          const response = await axios.get(`/api/check-galxe-passport/${walletAddress}`);
+          if (response.data.hasPassport) {
             setHasGalxePassport(true);
           }
         } catch (error) {

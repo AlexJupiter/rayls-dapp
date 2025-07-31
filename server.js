@@ -95,6 +95,13 @@ app.get('/api/check-bab-token/:address', async (req, res) => {
     }
 });
 
+// Endpoint for the frontend to check for the Galxe Passport NFT
+app.get('/api/check-galxe-passport/:address', async (req, res) => {
+  const { address } = req.params;
+  const hasPassport = await checkGalxePassport(address);
+  res.json({ hasPassport });
+});
+
 
 // --- RPC Proxy Logic ---
 
