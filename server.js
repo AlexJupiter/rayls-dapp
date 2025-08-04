@@ -4,6 +4,12 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import { ethers } from 'ethers';
 import axios from 'axios';
+import dotenv from 'dotenv';
+import Stripe from 'stripe';
+
+dotenv.config();
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // --- CONFIGURATION ---
 // Using the Droplet's public Reserved IP until the App Platform VPC feature is enabled by Digital Ocean support.
@@ -102,6 +108,23 @@ app.get('/api/check-galxe-passport/:address', async (req, res) => {
   res.json({ hasPassport });
 });
 
+app.post('/api/create-stripe-session', async (req, res) => {
+  const { userWalletAddress } = req.body;
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['us_bank_account'],
+      mode: 'setup',
+      success_url: `http://localhost:5173/dashboard?stripe_verification=success`,
+      cancel_url: `http://localhost:5173/dashboard?stripe_verification=cancel`,
+      client_reference_id: userWalletAddress,
+    });
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Error creating Stripe session:', error);
+    res.status(500).json({ error: 'Failed to create Stripe session' });
+  }
+});
 
 // --- RPC Proxy Logic ---
 
