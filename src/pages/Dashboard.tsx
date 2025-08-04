@@ -468,11 +468,18 @@ export const Dashboard: React.FC = () => {
                     onClick={handleCreateAttestation}
                     className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
                   >
-                      <Plus size={18} className="mr-2" />
+                    <Plus size={18} className="mr-2" />
                     Create attestation
-                    </button>
+                  </button>
+                  <button
+                    onClick={() => navigate('/validate-microdeposits')}
+                    className="border border-[#b388ff] text-[#b388ff] hover:bg-[#b388ff]/10 font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
+                  >
+                    <CheckCircle size={18} className="mr-2" />
+                    Validate microdeposits
+                  </button>
                   <a
-                    href="https://dash.readme.com/project/parfin-rayls/v2.3.1/docs/rayls-testnet-attestations"
+                    href="https://rayls.io/attestations"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-black hover:text-gray-800 font-medium py-3 px-6 rounded-lg inline-flex items-center transition-colors text-sm border border-black hover:border-gray-800"
