@@ -4,6 +4,7 @@ import { DynamicContextProvider } from '@dynamic-labs/sdk-react-core';
 import { EthereumWalletConnectors } from '@dynamic-labs/ethereum';
 import { Home } from './pages/Home';
 import { Dashboard } from './pages/Dashboard';
+import { ValidateMicrodeposits } from './pages/ValidateMicrodeposits';
 import { Layout } from './components/Layout';
 
 export function App() {
@@ -12,13 +13,6 @@ export function App() {
       settings={{
         environmentId: 'd7fb11b9-b0e9-4ded-af8d-bab12a28e40d',
         walletConnectors: [EthereumWalletConnectors],
-        overrides: {
-          lang: {
-            "en": {
-              "dyn_login.title": "Connect wallet",
-            }
-          }
-        }
       }}
     >
       <BrowserRouter>
@@ -26,6 +20,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/validate-microdeposits" element={<ValidateMicrodeposits />} />
           </Routes>
         </Layout>
       </BrowserRouter>
