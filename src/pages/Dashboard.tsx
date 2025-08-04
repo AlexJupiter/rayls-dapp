@@ -472,7 +472,7 @@ export const Dashboard: React.FC = () => {
                     Create attestation
                     </button>
                   <a
-                    href="https://rayls.io/attestations"
+                    href="https://dash.readme.com/project/parfin-rayls/v2.3.1/docs/rayls-testnet-attestations"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-black hover:text-gray-800 font-medium py-3 px-6 rounded-lg inline-flex items-center transition-colors text-sm border border-black hover:border-gray-800"
