@@ -35,6 +35,23 @@ export const Dashboard: React.FC = () => {
   const [stats, setStats] = useState({ totalWallets: '...', totalTransactions: '...' });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
+  const handleCreateAttestation = async () => {
+    if (!primaryWallet) return;
+
+    try {
+      const response = await axios.post('/api/create-stripe-session', {
+        userWalletAddress: primaryWallet.address,
+      });
+
+      const { url } = response.data;
+      if (url) {
+        window.location.href = url; // Redirect the user to Stripe
+      }
+    } catch (error) {
+      console.error('Failed to create Stripe session:', error);
+    }
+  };
+
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/');
@@ -148,17 +165,17 @@ export const Dashboard: React.FC = () => {
               <div className="flex flex-col md:flex-row justify-between p-6">
                 {/* Welcome text section */}
                 <div className="md:max-w-[65%] mb-6 md:mb-0">
-                  <h2 className="text-2xl font-bold mb-3 flex items-center">
-                    <span className="mr-2">👋</span> Welcome to the Rayls Testnet
-                    Dashboard
-                  </h2>
+                <h2 className="text-2xl font-bold mb-3 flex items-center">
+                  <span className="mr-2">👋</span> Welcome to the Rayls Testnet
+                  Dashboard
+                </h2>
                   <p className="mb-4">
-                    Rayls is a high-performance public & private EVM blockchain
-                    system built for RWA, with native compliance and governance
-                    controls. To use the Rayls Public Testnet you must have a
-                    valid attestation to your connected wallet address.
-                  </p>
-                </div>
+                  Rayls is a high-performance public & private EVM blockchain
+                  system built for RWA, with native compliance and governance
+                  controls. To use the Rayls Public Testnet you must have a
+                  valid attestation to your connected wallet address.
+                </p>
+              </div>
                 {/* Stats section */}
                 <div className="md:w-[30%] flex flex-col justify-center bg-white rounded-xl p-5 self-center">
                   <a 
@@ -267,7 +284,7 @@ export const Dashboard: React.FC = () => {
                           </div>
                           {/* Verify onchain button */}
                           <div className="mt-4 flex items-center text-black text-sm font-medium">
-                              Verify onchain{' '}
+                            Verify onchain{' '}
                               <ArrowRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
                           </div>
                         </div>
@@ -435,33 +452,35 @@ export const Dashboard: React.FC = () => {
                     )}
                   </div>
                 ) : (
-                  !isLoadingGalxe && !hasGalxePassport && (
+                  !isLoadingGalxe &&
+                  !hasGalxePassport && (
                     <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-                      <p className="text-gray-600 mb-6">
+                      <p className="text-gray-600">
                         You currently have no attestations to your connected
-                        wallet address to enable you to transact on Rayls
+                        wallet address to enable you to transact on Rayls.
                       </p>
-                      <button className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center mx-auto transition-colors">
-                        <Plus size={18} className="mr-2" />
-                        Create attestation
-                      </button>
                     </div>
                   )
                 )}
 
-                {/* Learn more about attestations link */}
-                <a
-                  href="https://dash.readme.com/project/parfin-rayls/v2.3.1/docs/rayls-testnet-attestations"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group mt-6 inline-flex items-center rounded-lg border border-black py-2 px-4 text-sm font-medium text-black transition-colors hover:border-gray-800 hover:text-gray-800"
-                >
-                  Learn more about attestations
-                  <ArrowRight
-                    size={16}
-                    className="ml-2 transition-transform group-hover:translate-x-1"
-                  />
-                </a>
+                <div className="flex flex-wrap gap-4 mt-6">
+                  <button
+                    onClick={handleCreateAttestation}
+                    className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
+                  >
+                      <Plus size={18} className="mr-2" />
+                    Create attestation
+                    </button>
+                  <a
+                    href="https://rayls.io/attestations"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-black hover:text-gray-800 font-medium py-3 px-6 rounded-lg inline-flex items-center transition-colors text-sm border border-black hover:border-gray-800"
+                  >
+                    <ExternalLink size={16} className="mr-2" />
+                    Learn more about attestations
+                  </a>
+                </div>
               </div>
             </div>
             {/* Action Tiles */}
