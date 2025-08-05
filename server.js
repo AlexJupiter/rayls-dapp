@@ -200,7 +200,9 @@ app.get('/api/get-setup-intent-from-session', async (req, res) => {
 });
 
 app.post('/api/create-stripe-session', async (req, res) => {
-  const { userWalletAddress } = req.body;
+  const { userWalletAddress, countryCode } = req.body;
+
+  console.log(`Received request to create Stripe session for country: ${countryCode}`);
 
   try {
     // 1. Create a new Customer in Stripe
@@ -210,11 +212,95 @@ app.post('/api/create-stripe-session', async (req, res) => {
       },
     });
 
+    const paymentMethodTypes = {
+      US: ['us_bank_account'],
+      GB: ['bacs_debit'],
+      CA: ['acss_debit'],
+      AU: ['au_becs_debit'],
+      NZ: ['au_becs_debit'],
+      // SEPA covers all listed EU countries
+      AT: ['sepa_debit'],
+      BE: ['sepa_debit'],
+      BG: ['sepa_debit'],
+      HR: ['sepa_debit'],
+      CY: ['sepa_debit'],
+      CZ: ['sepa_debit'],
+      DK: ['sepa_debit'],
+      EE: ['sepa_debit'],
+      FI: ['sepa_debit'],
+      FR: ['sepa_debit'],
+      DE: ['sepa_debit'],
+      GI: ['sepa_debit'],
+      GR: ['sepa_debit'],
+      HU: ['sepa_debit'],
+      IE: ['sepa_debit'],
+      IT: ['sepa_debit'],
+      LV: ['sepa_debit'],
+      LI: ['sepa_debit'],
+      LT: ['sepa_debit'],
+      LU: ['sepa_debit'],
+      MT: ['sepa_debit'],
+      NL: ['sepa_debit'],
+      NO: ['sepa_debit'],
+      PL: ['sepa_debit'],
+      PT: ['sepa_debit'],
+      RO: ['sepa_debit'],
+      SK: ['sepa_debit'],
+      SI: ['sepa_debit'],
+      ES: ['sepa_debit'],
+      SE: ['sepa_debit'],
+    };
+
+    const currencyForCountry = {
+      US: 'usd',
+      GB: 'gbp',
+      CA: 'cad',
+      AU: 'aud',
+      NZ: 'nzd',
+      // All SEPA countries use EUR
+      AT: 'eur',
+      BE: 'eur',
+      BG: 'eur',
+      HR: 'eur',
+      CY: 'eur',
+      CZ: 'eur',
+      DK: 'eur',
+      EE: 'eur',
+      FI: 'eur',
+      FR: 'eur',
+      DE: 'eur',
+      GI: 'eur',
+      GR: 'eur',
+      HU: 'eur',
+      IE: 'eur',
+      IT: 'eur',
+      LV: 'eur',
+      LI: 'eur',
+      LT: 'eur',
+      LU: 'eur',
+      MT: 'eur',
+      NL: 'eur',
+      NO: 'eur',
+      PL: 'eur',
+      PT: 'eur',
+      RO: 'eur',
+      SK: 'eur',
+      SI: 'eur',
+      ES: 'eur',
+      SE: 'eur',
+    }
+
+    const selectedPaymentMethods = paymentMethodTypes[countryCode] || ['us_bank_account'];
+    const selectedCurrency = currencyForCountry[countryCode] || 'usd';
+
+    console.log(`Selected payment methods for Stripe: ${selectedPaymentMethods}`);
+
     // 2. Create a Checkout Session for that new customer
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['us_bank_account'],
+      payment_method_types: selectedPaymentMethods,
       mode: 'setup',
       customer: customer.id,
+      currency: selectedCurrency,
       success_url: `${FRONTEND_URL}/validate-microdeposits?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${FRONTEND_URL}/dashboard?stripe_verification=cancel`,
       setup_intent_data: {

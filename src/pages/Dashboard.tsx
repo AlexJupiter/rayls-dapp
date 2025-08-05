@@ -21,6 +21,7 @@ import {
   Layers,
 } from 'lucide-react';
 import axios from 'axios';
+import { CountrySelectionModal } from '../components/CountrySelectionModal';
 
 export const Dashboard: React.FC = () => {
   const { isAuthenticated, user, primaryWallet } = useDynamicContext();
@@ -33,13 +34,15 @@ export const Dashboard: React.FC = () => {
   const [isLoadingGalxe, setIsLoadingGalxe] = useState(true);
   const [stats, setStats] = useState({ totalWallets: '...', totalTransactions: '...' });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
 
-  const handleCreateAttestation = async () => {
+  const handleCreateAttestation = async (countryCode: string) => {
     if (!primaryWallet) return;
 
     try {
       const response = await axios.post('/api/create-stripe-session', {
         userWalletAddress: primaryWallet.address,
+        countryCode: countryCode,
       });
 
       const { url } = response.data;
@@ -48,6 +51,8 @@ export const Dashboard: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to create Stripe session:', error);
+    } finally {
+      setIsCountryModalOpen(false);
     }
   };
   
@@ -156,6 +161,11 @@ export const Dashboard: React.FC = () => {
   const noAttestationsFound = !isLoadingAttestation && !isLoadingBinance && !isLoadingGalxe && !coinbaseAttestationId && !hasBinanceAttestation && !hasGalxePassport;
   
   return <div className="min-h-screen bg-[#121212] text-white">
+      <CountrySelectionModal
+        isOpen={isCountryModalOpen}
+        onClose={() => setIsCountryModalOpen(false)}
+        onConfirm={handleCreateAttestation}
+      />
       <div className="p-6 md:p-8">
         <div className="max-w-6xl mx-auto">
           <div className="relative z-50 flex justify-between items-center mb-8">
@@ -453,7 +463,7 @@ export const Dashboard: React.FC = () => {
               
               <div className="flex flex-wrap gap-4 mt-6">
                 <button
-                  onClick={handleCreateAttestation}
+                  onClick={() => setIsCountryModalOpen(true)}
                   className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
                 >
                       <Plus size={18} className="mr-2" />
