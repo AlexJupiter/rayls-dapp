@@ -2,27 +2,15 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
-import { ethers } from 'ethers';
+import { ethers, Wallet, getBytes } from 'ethers';
 import axios from 'axios';
 import dotenv from 'dotenv';
 import Stripe from 'stripe';
-import pg from 'pg';
+import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 
 dotenv.config();
 
-const { Pool } = pg;
-
-const poolConfig = {
-  connectionString: process.env.DATABASE_URL,
-};
-
-// For local development, allow self-signed certificates.
-// In production (on Digital Ocean), NODE_ENV will be 'production' and this block will be skipped.
-if (process.env.NODE_ENV !== 'production') {
-  poolConfig.ssl = { rejectUnauthorized: false };
-}
-
-const pool = new Pool(poolConfig);
+const EASContractAddress = "0xC2679fBD37d54388Ce493F1DB75320D236e1815e"; // Sepolia v0.26
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -88,13 +76,14 @@ app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async (r
 
     if (clientReferenceId && stripeCustomerId) {
       try {
-        await pool.query(
-          'INSERT INTO verifications (wallet_address, stripe_customer_id, status) VALUES ($1, $2, $3) ON CONFLICT (wallet_address) DO UPDATE SET stripe_customer_id = $2, status = $3',
-          [clientReferenceId, stripeCustomerId, 'verified']
-        );
-        console.log(`Successfully saved verification for wallet: ${clientReferenceId}`);
-      } catch (dbError) {
-        console.error('Database error on webhook processing:', dbError);
+        console.log(`Stripe verification successful for wallet: ${clientReferenceId}`);
+        // Attestation is now triggered directly after webhook success.
+        const customer = await stripe.customers.retrieve(stripeCustomerId);
+        const countryCode = customer.metadata.country_code || 'N/A';
+        await issueStripeAttestation(clientReferenceId, countryCode);
+
+      } catch (error) {
+        console.error('Error during webhook processing:', error);
       }
     }
   }
@@ -130,18 +119,38 @@ async function checkGalxePassport(address) {
   }
 }
 
-async function checkStripeVerification(address) {
+async function issueStripeAttestation(recipientAddress, countryCode) {
   try {
-    const result = await pool.query(
-      'SELECT id FROM verifications WHERE wallet_address = $1 AND status = $2',
-      [address, 'verified']
-    );
-    return result.rowCount > 0;
+    console.log(`Attempting to issue attestation for ${recipientAddress}`);
+    const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL);
+    const signer = new Wallet(process.env.ISSUER_WALLET_PRIVATE_KEY, provider);
+    const eas = new EAS(EASContractAddress);
+    eas.connect(signer);
+
+    const schemaEncoder = new SchemaEncoder("bool isStripeVerified,string verificationType,string countryCode");
+    const encodedData = schemaEncoder.encodeData([
+      { name: "isStripeVerified", value: true, type: "bool" },
+      { name: "verificationType", value: "bank_account", type: "string" },
+      { name: "countryCode", value: countryCode, type: "string" },
+    ]);
+
+    const tx = await eas.attest({
+      schema: process.env.STRIPE_SCHEMA_UID,
+      data: {
+        recipient: recipientAddress,
+        expirationTime: 0,
+        revocable: true,
+        data: encodedData,
+      },
+    });
+
+    const newAttestationUID = await tx.wait();
+    console.log(`Successfully issued attestation for ${recipientAddress}. New attestation UID: ${newAttestationUID}`);
   } catch (error) {
-    console.error(`Database check failed for address ${address}:`, error);
-    return false;
+    console.error(`Failed to issue attestation for ${recipientAddress}:`, error);
   }
 }
+
 
 // --- API Endpoints ---
 
@@ -209,6 +218,7 @@ app.post('/api/create-stripe-session', async (req, res) => {
     const customer = await stripe.customers.create({
       metadata: {
         wallet_address: userWalletAddress,
+        country_code: countryCode,
       },
     });
 
@@ -391,19 +401,15 @@ app.post('/rpc', async (req, res) => {
                 console.log(`Binance attestation not found for ${userAddress}. Checking for Galxe Passport...`);
                 const hasGalxe = await checkGalxePassport(userAddress);
                 if (!hasGalxe) {
-                  console.log(`Galxe passport not found for ${userAddress}. Checking for Stripe verification...`);
-                  const hasStripeVerification = await checkStripeVerification(userAddress);
-                  if (!hasStripeVerification) {
-                    console.log(`Verification FAILED for address: ${userAddress}. No valid attestation or verification found.`);
-                    return res.json({
-                      jsonrpc: '2.0',
-                      id,
-                      error: {
-                        code: -32602,
-                        message: 'Permission Denied: Address does not have the required attestation or verification.'
-                      }
-                    });
-                  }
+                  console.log(`Verification FAILED for address: ${userAddress}. No valid attestation found.`);
+                  return res.json({
+                    jsonrpc: '2.0',
+                    id,
+                    error: {
+                      code: -32602,
+                      message: 'Permission Denied: Address does not have the required attestation.'
+                    }
+                  });
                 }
               }
             }

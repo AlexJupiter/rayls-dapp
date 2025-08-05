@@ -139,7 +139,6 @@ To run the application on your local machine, follow these steps:
 
 - Node.js (version 18 or higher)
 - npm (or your preferred package manager)
-- A running PostgreSQL database instance
 - A Stripe account and API keys
 
 ### 1. Clone the Repository
@@ -164,29 +163,20 @@ npm install
 The backend server requires several environment variables to function correctly. Create a `.env` file in the root of the project and add the following variables:
 
 ```
-DATABASE_URL="postgresql://user:password@host:port/database"
 STRIPE_SECRET_KEY="sk_test_..."
 STRIPE_WEBHOOK_SECRET="whsec_..."
+ISSUER_WALLET_PRIVATE_KEY="YOUR_WALLET_PRIVATE_KEY_WITHOUT_0x"
+SEPOLIA_RPC_URL="YOUR_SEPOLIA_RPC_URL"
+STRIPE_SCHEMA_UID="YOUR_STRIPE_EAS_SCHEMA_UID"
 ```
 
-- **`DATABASE_URL`**: Your PostgreSQL connection string.
 - **`STRIPE_SECRET_KEY`**: Your secret API key from your Stripe Dashboard.
 - **`STRIPE_WEBHOOK_SECRET`**: The webhook signing secret. For local testing, you can obtain this by using the Stripe CLI to forward events: `stripe listen --forward-to http://localhost:8080/webhooks/stripe`.
+- **`ISSUER_WALLET_PRIVATE_KEY`**: The private key of the wallet you wish to use to issue attestations on the Sepolia network.
+- **`SEPOLIA_RPC_URL`**: Your personal RPC URL for connecting to the Sepolia testnet.
+- **`STRIPE_SCHEMA_UID`**: The on-chain UID of the attestation schema you created.
 
-### 4. Set Up the Database
-
-Connect to your PostgreSQL instance and run the following SQL command to create the necessary `verifications` table:
-
-```sql
-CREATE TABLE verifications (
-  id SERIAL PRIMARY KEY,
-  wallet_address VARCHAR(42) NOT NULL UNIQUE,
-  stripe_customer_id VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### 5. Run the Backend Server
+### 4. Run the Backend Server
 
 Start the backend Express server, which handles API requests and the RPC proxy. It will run on `http://localhost:8080`.
 
@@ -194,7 +184,7 @@ Start the backend Express server, which handles API requests and the RPC proxy. 
 npm run start
 ```
 
-### 6. Run the Frontend Development Server
+### 5. Run the Frontend Development Server
 
 In a separate terminal, start the Vite development server for the React frontend. It will run on `http://localhost:5173`.
 
