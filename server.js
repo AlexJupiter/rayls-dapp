@@ -225,9 +225,6 @@ app.post('/api/create-stripe-session', async (req, res) => {
     const paymentMethodTypes = {
       US: ['us_bank_account'],
       GB: ['bacs_debit'],
-      CA: ['acss_debit'],
-      AU: ['au_becs_debit'],
-      NZ: ['au_becs_debit'],
       // SEPA covers all listed EU countries
       AT: ['sepa_debit'],
       BE: ['sepa_debit'],
@@ -264,9 +261,6 @@ app.post('/api/create-stripe-session', async (req, res) => {
     const currencyForCountry = {
       US: 'usd',
       GB: 'gbp',
-      CA: 'cad',
-      AU: 'aud',
-      NZ: 'nzd',
       // All SEPA countries use EUR
       AT: 'eur',
       BE: 'eur',
@@ -305,8 +299,7 @@ app.post('/api/create-stripe-session', async (req, res) => {
 
     console.log(`Selected payment methods for Stripe: ${selectedPaymentMethods}`);
 
-    // 2. Create a Checkout Session for that new customer
-    const session = await stripe.checkout.sessions.create({
+    const sessionOptions = {
       payment_method_types: selectedPaymentMethods,
       mode: 'setup',
       customer: customer.id,
@@ -319,7 +312,10 @@ app.post('/api/create-stripe-session', async (req, res) => {
           client_reference_id: userWalletAddress,
         },
       },
-    });
+    };
+
+    // 2. Create a Checkout Session for that new customer
+    const session = await stripe.checkout.sessions.create(sessionOptions);
     res.json({ url: session.url });
   } catch (error) {
     console.error('Error creating Stripe session:', error);
