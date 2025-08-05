@@ -23,6 +23,8 @@ import {
 import axios from 'axios';
 import { CountrySelectionModal } from '../components/CountrySelectionModal';
 
+const STRIPE_SCHEMA_UID = "0x120379ab9665d06dd367526f95f3f5c55ed3f419f7d957e7f8ec233db9ce28bc";
+
 export const Dashboard: React.FC = () => {
   const { isAuthenticated, user, primaryWallet } = useDynamicContext();
   const navigate = useNavigate();
@@ -32,6 +34,8 @@ export const Dashboard: React.FC = () => {
   const [isLoadingAttestation, setIsLoadingAttestation] = useState(true);
   const [isLoadingBinance, setIsLoadingBinance] = useState(true);
   const [isLoadingGalxe, setIsLoadingGalxe] = useState(true);
+  const [stripeAttestationId, setStripeAttestationId] = useState<string | null>(null);
+  const [isLoadingStripe, setIsLoadingStripe] = useState(true);
   const [stats, setStats] = useState({ totalWallets: '...', totalTransactions: '...' });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
@@ -116,6 +120,37 @@ export const Dashboard: React.FC = () => {
       }
     };
 
+    const checkStripeAttestation = async () => {
+      if (primaryWallet) {
+        setIsLoadingStripe(true);
+        const walletAddress = primaryWallet.address;
+        const query = `
+          query GetStripeAttestation {
+            attestations(
+              where: {
+                schemaId: { equals: "${STRIPE_SCHEMA_UID}" }
+                recipient: { equals: "${walletAddress}" }
+                revoked: { equals: false }
+              },
+              take: 1
+            ) { id }
+          }
+        `;
+        try {
+          const response = await axios.post('https://sepolia.easscan.org/graphql', { query });
+          if (response.data.data.attestations.length > 0) {
+            setStripeAttestationId(response.data.data.attestations[0].id);
+          }
+        } catch (error) {
+          console.error('Error fetching Stripe attestation:', error);
+        } finally {
+          setIsLoadingStripe(false);
+        }
+      } else {
+        setIsLoadingStripe(false);
+      }
+    };
+
     const checkBinanceAttestation = async () => {
       if (primaryWallet) {
         setIsLoadingBinance(true);
@@ -152,13 +187,14 @@ export const Dashboard: React.FC = () => {
     checkAttestations();
     checkBinanceAttestation();
     checkGalxePassport();
+    checkStripeAttestation();
   }, [primaryWallet]);
 
   if (!isAuthenticated || !user) {
     return <div>Loading...</div>;
   }
 
-  const noAttestationsFound = !isLoadingAttestation && !isLoadingBinance && !isLoadingGalxe && !coinbaseAttestationId && !hasBinanceAttestation && !hasGalxePassport;
+  const noAttestationsFound = !isLoadingAttestation && !isLoadingBinance && !isLoadingGalxe && !isLoadingStripe && !coinbaseAttestationId && !hasBinanceAttestation && !hasGalxePassport && !stripeAttestationId;
   
   return <div className="min-h-screen bg-[#121212] text-white">
       <CountrySelectionModal
@@ -246,12 +282,87 @@ export const Dashboard: React.FC = () => {
                 Attestations enabling transactions on Rayls Testnet
               </h2>
               <div className="space-y-5">
-                {isLoadingAttestation || isLoadingBinance || isLoadingGalxe ? (
+                {isLoadingAttestation || isLoadingBinance || isLoadingGalxe || isLoadingStripe ? (
                   <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
                     <p className="text-gray-600">Checking for attestations...</p>
                   </div>
                 ) : (
                   <>
+                    {stripeAttestationId && (
+                      <a
+                        href={`https://sepolia.easscan.org/attestation/view/${stripeAttestationId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group bg-white border border-gray-200 rounded-lg p-5 hover:bg-white/90 transition-colors shadow-sm block hover:shadow-[0_0_15px_rgba(179,136,255,0.3)] transition-all duration-300"
+                      >
+                        <div className="flex flex-col md:flex-row md:items-start">
+                          {/* Logo and title section - keep together in responsive */}
+                          <div className="flex items-start mb-2 md:mb-0">
+                            <div className="mr-4 flex-shrink-0">
+                              <svg width="800px" height="800px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+                                <circle cx="512" cy="512" r="512" fill="#635bff"/>
+                                <path d="M781.67 515.75c0-38.35-18.58-68.62-54.08-68.62s-57.23 30.26-57.23 68.32c0 45.09 25.47 67.87 62 67.87 17.83 0 31.31-4 41.5-9.74v-30c-10.19 5.09-21.87 8.24-36.7 8.24-14.53 0-27.42-5.09-29.06-22.77h73.26c.01-1.92.31-9.71.31-13.3zm-74-14.23c0-16.93 10.34-24 19.78-24 9.14 0 18.88 7 18.88 24zm-95.14-54.39a42.32 42.32 0 0 0-29.36 11.69l-1.95-9.29h-33v174.68l37.45-7.94.15-42.4c5.39 3.9 13.33 9.44 26.52 9.44 26.82 0 51.24-21.57 51.24-69.06-.12-43.45-24.84-67.12-51.05-67.12zm-9 103.22c-8.84 0-14.08-3.15-17.68-7l-.15-55.58c3.9-4.34 9.29-7.34 17.83-7.34 13.63 0 23.07 15.28 23.07 34.91.01 20.03-9.28 35.01-23.06 35.01zM496.72 438.29l37.6-8.09v-30.41l-37.6 7.94v30.56zm0 11.39h37.6v131.09h-37.6zm-40.3 11.08L454 449.68h-32.34v131.08h37.45v-88.84c8.84-11.54 23.82-9.44 28.46-7.79v-34.45c-4.78-1.8-22.31-5.1-31.15 11.08zm-74.91-43.59L345 425l-.15 120c0 22.17 16.63 38.5 38.8 38.5 12.28 0 21.27-2.25 26.22-4.94v-30.45c-4.79 1.95-28.46 8.84-28.46-13.33v-53.19h28.46v-31.91h-28.51zm-101.27 70.56c0-5.84 4.79-8.09 12.73-8.09a83.56 83.56 0 0 1 37.15 9.59V454a98.8 98.8 0 0 0-37.12-6.87c-30.41 0-50.64 15.88-50.64 42.4 0 41.35 56.93 34.76 56.93 52.58 0 6.89-6 9.14-14.38 9.14-12.43 0-28.32-5.09-40.9-12v35.66a103.85 103.85 0 0 0 40.9 8.54c31.16 0 52.58-15.43 52.58-42.25-.17-44.63-57.25-36.69-57.25-53.47z" fill="#fff"/>
+                              </svg>
+                            </div>
+                            <div className="flex-1 md:hidden">
+                              <h3 className="font-semibold text-lg">
+                                Stripe Bank Account Verification
+                              </h3>
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1 hidden md:flex">
+                              <h3 className="font-semibold text-lg mr-2">
+                                Stripe Bank Account Verification
+                              </h3>
+                            </div>
+                            <p className="text-gray-600 text-sm mb-2">
+                              You've authenticated your bank account with Stripe and
+                              Rayls has issued an attestation confirming this
+                            </p>
+                            <p className="text-gray-500 text-xs mb-3">
+                              This is using your existing KYC with your bank and is
+                              extremely trusted.
+                            </p>
+                            {/* Stats section - shows inline on mobile, to the right on desktop */}
+                            <div className="mb-4 md:hidden">
+                              <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg inline-flex items-center">
+                                <Users size={16} className="text-[#b388ff] mr-2" />
+                                <p className="text-xs text-gray-600">
+                                  Over 300,000 accounts have this attestation
+                                </p>
+                              </div>
+                            </div>
+                            {/* Verify onchain and More info buttons */}
+                            <div className="mt-4 flex items-center space-x-6">
+                              <a
+                                href={`https://sepolia.easscan.org/attestation/view/${stripeAttestationId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex items-center text-black text-sm font-medium"
+                              >
+                                Verify onchain{' '}
+                                <ArrowRight
+                                  size={14}
+                                  className="ml-1 group-hover:translate-x-1 transition-transform"
+                                />
+                              </a>
+                            </div>
+                          </div>
+                          {/* Stats section - hidden on mobile, shown on desktop */}
+                          <div className="hidden md:flex md:items-center md:ml-4">
+                            <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg flex items-center">
+                              <Users size={16} className="text-[#b388ff] mr-2" />
+                              <p className="text-xs text-gray-600 whitespace-nowrap">
+                                Over 300,000 accounts
+                                <br />
+                                have this attestation
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </a>
+                    )}
                     {coinbaseAttestationId && (
                        <a 
                         href={`https://base.easscan.org/attestation/view/${coinbaseAttestationId}`}
