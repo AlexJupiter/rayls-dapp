@@ -21,7 +21,6 @@ import {
   Layers,
 } from 'lucide-react';
 import axios from 'axios';
-import { ethers } from "ethers";
 
 export const Dashboard: React.FC = () => {
   const { isAuthenticated, user, primaryWallet } = useDynamicContext();
@@ -45,13 +44,13 @@ export const Dashboard: React.FC = () => {
 
       const { url } = response.data;
       if (url) {
-        window.location.href = url; // Redirect the user to Stripe
+        window.location.href = url;
       }
     } catch (error) {
       console.error('Failed to create Stripe session:', error);
     }
   };
-
+  
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/');
@@ -100,27 +99,31 @@ export const Dashboard: React.FC = () => {
           if (response.data.data.attestations.length > 0) {
             const attestationId = response.data.data.attestations[0].id;
             setCoinbaseAttestationId(attestationId);
-
-            // If Coinbase attestation is found, check for Binance BAB token via our own API
-            setIsLoadingBinance(true);
-            try {
-              const babResponse = await axios.get(`/api/check-bab-token/${walletAddress}`);
-              if (babResponse.data.hasToken) {
-                setHasBinanceAttestation(true);
-              }
-            } catch (binanceError) {
-              console.error('Error checking Binance BAB token via proxy:', binanceError);
-            }
           }
         } catch (error) {
           console.error('Error fetching attestations:', error);
         } finally {
           setIsLoadingAttestation(false);
-          setIsLoadingBinance(false);
         }
-      } else if (user) {
+      } else {
         setIsLoadingAttestation(false);
         setIsLoadingBinance(false);
+      }
+    };
+
+    const checkBinanceAttestation = async () => {
+      if (primaryWallet) {
+        setIsLoadingBinance(true);
+        try {
+          const babResponse = await axios.get(`/api/check-bab-token/${primaryWallet.address}`);
+          if (babResponse.data.hasToken) {
+            setHasBinanceAttestation(true);
+          }
+        } catch (binanceError) {
+          console.error('Error checking Binance BAB token via proxy:', binanceError);
+        } finally {
+          setIsLoadingBinance(false);
+        }
       }
     };
 
@@ -142,12 +145,15 @@ export const Dashboard: React.FC = () => {
     };
 
     checkAttestations();
+    checkBinanceAttestation();
     checkGalxePassport();
-  }, [user, primaryWallet]);
+  }, [primaryWallet]);
 
   if (!isAuthenticated || !user) {
     return <div>Loading...</div>;
   }
+
+  const noAttestationsFound = !isLoadingAttestation && !isLoadingBinance && !isLoadingGalxe && !coinbaseAttestationId && !hasBinanceAttestation && !hasGalxePassport;
   
   return <div className="min-h-screen bg-[#121212] text-white">
       <div className="p-6 md:p-8">
@@ -165,17 +171,17 @@ export const Dashboard: React.FC = () => {
               <div className="flex flex-col md:flex-row justify-between p-6">
                 {/* Welcome text section */}
                 <div className="md:max-w-[65%] mb-6 md:mb-0">
-                <h2 className="text-2xl font-bold mb-3 flex items-center">
-                  <span className="mr-2">👋</span> Welcome to the Rayls Testnet
-                  Dashboard
-                </h2>
+                  <h2 className="text-2xl font-bold mb-3 flex items-center">
+                    <span className="mr-2">👋</span> Welcome to the Rayls Testnet
+                    Dashboard
+                  </h2>
                   <p className="mb-4">
-                  Rayls is a high-performance public & private EVM blockchain
-                  system built for RWA, with native compliance and governance
-                  controls. To use the Rayls Public Testnet you must have a
-                  valid attestation to your connected wallet address.
-                </p>
-              </div>
+                    Rayls is a high-performance public & private EVM blockchain
+                    system built for RWA, with native compliance and governance
+                    controls. To use the Rayls Public Testnet you must have a
+                    valid attestation to your connected wallet address.
+                  </p>
+                </div>
                 {/* Stats section */}
                 <div className="md:w-[30%] flex flex-col justify-center bg-white rounded-xl p-5 self-center">
                   <a 
@@ -230,83 +236,77 @@ export const Dashboard: React.FC = () => {
                 Attestations enabling transactions on Rayls Testnet
               </h2>
               <div className="space-y-5">
-                {isLoadingAttestation ? (
+                {isLoadingAttestation || isLoadingBinance || isLoadingGalxe ? (
                   <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
                     <p className="text-gray-600">Checking for attestations...</p>
                   </div>
-                ) : coinbaseAttestationId ? (
-                  <div className="space-y-5">
-                    <a 
-                      href={`https://base.easscan.org/attestation/view/${coinbaseAttestationId}`}
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="group bg-white border border-gray-200 rounded-lg p-5 hover:bg-white/90 transition-colors shadow-sm block hover:shadow-[0_0_15px_rgba(179,136,255,0.3)] transition-all duration-300"
-                    >
-                      <div className="flex flex-col md:flex-row md:items-start">
-                        {/* Coinbase logo */}
-                        <div className="rounded-full mr-4 mt-1 flex items-center justify-center w-10 h-10">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" fill="none" viewBox="0 0 512 512" id="coinbase" className="w-10 h-10">
-                              <g clipPath="url(#clip0_84_15704)">
-                                <rect width="512" height="512" fill="#0052FF"></rect>
-                                <path fill="#0052FF" d="M255.5 40C375.068 40 472 136.932 472 256.5C472 376.068 375.068 473 255.5 473C135.932 473 39 376.068 39 256.5C39 136.932 135.932 40 255.5 40Z"></path>
-                                <path fill="#fff" d="M255.593 331.733C213.515 331.733 179.513 297.638 179.513 255.653C179.513 213.668 213.608 179.573 255.593 179.573C293.258 179.573 324.535 206.999 330.547 242.973H407.19C400.71 164.826 335.337 103.398 255.5 103.398C171.436 103.398 103.245 171.589 103.245 255.653C103.245 339.717 171.436 407.907 255.5 407.907C335.337 407.907 400.71 346.48 407.19 268.333H330.453C324.441 304.307 293.258 331.733 255.593 331.733Z"></path>
-                              </g>
-                              <defs>
-                                <clipPath id="clip0_84_15704">
-                                  <circle cx="256" cy="256" r="256" fill="#fff"></circle>
-                                </clipPath>
-                              </defs>
-                            </svg>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <h3 className="font-semibold text-lg mr-2">
-                              Coinbase Verified Account
-                            </h3>
+                ) : (
+                  <>
+                    {coinbaseAttestationId && (
+                       <a 
+                        href={`https://base.easscan.org/attestation/view/${coinbaseAttestationId}`}
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="group bg-white border border-gray-200 rounded-lg p-5 hover:bg-white/90 transition-colors shadow-sm block hover:shadow-[0_0_15px_rgba(179,136,255,0.3)] transition-all duration-300"
+                      >
+                        <div className="flex flex-col md:flex-row md:items-start">
+                          <div className="rounded-full mr-4 mt-1 flex items-center justify-center w-10 h-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" fill="none" viewBox="0 0 512 512" id="coinbase" className="w-10 h-10">
+                                <g clipPath="url(#clip0_84_15704)">
+                                  <rect width="512" height="512" fill="#0052FF"></rect>
+                                  <path fill="#0052FF" d="M255.5 40C375.068 40 472 136.932 472 256.5C472 376.068 375.068 473 255.5 473C135.932 473 39 376.068 39 256.5C39 136.932 135.932 40 255.5 40Z"></path>
+                                  <path fill="#fff" d="M255.593 331.733C213.515 331.733 179.513 297.638 179.513 255.653C179.513 213.668 213.608 179.573 255.593 179.573C293.258 179.573 324.535 206.999 330.547 242.973H407.19C400.71 164.826 335.337 103.398 255.5 103.398C171.436 103.398 103.245 171.589 103.245 255.653C103.245 339.717 171.436 407.907 255.5 407.907C335.337 407.907 400.71 346.48 407.19 268.333H330.453C324.441 304.307 293.258 331.733 255.593 331.733Z"></path>
+                                </g>
+                                <defs>
+                                  <clipPath id="clip0_84_15704">
+                                    <circle cx="256" cy="256" r="256" fill="#fff"></circle>
+                                  </clipPath>
+                                </defs>
+                              </svg>
                           </div>
-                          <p className="text-gray-600 text-sm mb-2">
-                            Your Coinbase account has been verified and attested
-                            onchain.
-                          </p>
-                          <p className="text-gray-500 text-xs mb-3">
-                            This attestation allows a regulator to contact
-                            Coinbase to find out your identity, meaning you can
-                            trade nearly all assets on Rayls.
-                          </p>
-                          {/* Stats section - shows inline on mobile, to the right on desktop */}
-                          <div className="mb-4 md:hidden">
-                            <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg inline-flex items-center">
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <h3 className="font-semibold text-lg mr-2">
+                                Coinbase Verified Account
+                              </h3>
+                            </div>
+                            <p className="text-gray-600 text-sm mb-2">
+                              Your Coinbase account has been verified and attested
+                              onchain.
+                            </p>
+                            <p className="text-gray-500 text-xs mb-3">
+                              This attestation allows a regulator to contact
+                              Coinbase to find out your identity, meaning you can
+                              trade nearly all assets on Rayls.
+                            </p>
+                            <div className="mb-4 md:hidden">
+                              <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg inline-flex items-center">
+                                <Users size={16} className="text-[#b388ff] mr-2" />
+                                <p className="text-xs text-gray-600">
+                                  Over 600,000 accounts have this attestation
+                                </p>
+                              </div>
+                            </div>
+                            <div className="mt-4 flex items-center text-black text-sm font-medium">
+                                Verify onchain{' '}
+                                <ArrowRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
+                            </div>
+                          </div>
+                          <div className="hidden md:flex md:items-center md:ml-4">
+                            <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg flex items-center">
                               <Users size={16} className="text-[#b388ff] mr-2" />
-                              <p className="text-xs text-gray-600">
-                                Over 600,000 accounts have this attestation
+                              <p className="text-xs text-gray-600 whitespace-nowrap">
+                                Over 600,000 accounts
+                                <br />
+                                have this attestation
                               </p>
                             </div>
                           </div>
-                          {/* Verify onchain button */}
-                          <div className="mt-4 flex items-center text-black text-sm font-medium">
-                            Verify onchain{' '}
-                              <ArrowRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
-                          </div>
                         </div>
-                        {/* Stats section - hidden on mobile, shown on desktop */}
-                        <div className="hidden md:flex md:items-center md:ml-4">
-                          <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg flex items-center">
-                            <Users size={16} className="text-[#b388ff] mr-2" />
-                            <p className="text-xs text-gray-600 whitespace-nowrap">
-                              Over 600,000 accounts
-                              <br />
-                              have this attestation
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </a>
+                      </a>
+                    )}
                     
-                    {isLoadingBinance ? (
-                      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-                        <p className="text-gray-600">Checking for more attestations...</p>
-                      </div>
-                    ) : hasBinanceAttestation && (
+                    {hasBinanceAttestation && (
                       <a
                         href={`https://bscscan.com/address/${primaryWallet?.address}#asset-nfts`}
                         target="_blank" 
@@ -314,7 +314,6 @@ export const Dashboard: React.FC = () => {
                         className="group bg-white border border-gray-200 rounded-lg p-5 hover:bg-white/90 transition-colors shadow-sm block hover:shadow-[0_0_15px_rgba(179,136,255,0.3)] transition-all duration-300"
                       >
                         <div className="flex flex-col md:flex-row md:items-start">
-                          {/* Binance logo */}
                           <div className="rounded-full mr-4 mt-1 flex items-center justify-center w-10 h-10">
                             <svg width="534" height="534" viewBox="0 0 534 534" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
                               <path d="M266.667 533.333C413.943 533.333 533.333 413.943 533.333 266.667C533.333 119.391 413.943 0 266.667 0C119.391 0 0 119.391 0 266.667C0 413.943 119.391 533.333 266.667 533.333Z" fill="#0B0E11"/>
@@ -336,7 +335,6 @@ export const Dashboard: React.FC = () => {
                               to find out your identity, meaning you can trade
                               nearly all assets on Rayls.
                             </p>
-                            {/* Stats section - shows inline on mobile, to the right on desktop */}
                             <div className="mb-4 md:hidden">
                               <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg inline-flex items-center">
                                 <Users size={16} className="text-[#b388ff] mr-2" />
@@ -345,7 +343,6 @@ export const Dashboard: React.FC = () => {
                                 </p>
                               </div>
                             </div>
-                            {/* Verify onchain button */}
                             <div className="mt-4 flex items-center text-black text-sm font-medium">
                                 Verify onchain{' '}
                                 <ArrowRight
@@ -354,7 +351,6 @@ export const Dashboard: React.FC = () => {
                                 />
                             </div>
                           </div>
-                          {/* Stats section - hidden on mobile, shown on desktop */}
                           <div className="hidden md:flex md:items-center md:ml-4">
                             <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg flex items-center">
                               <Users size={16} className="text-[#b388ff] mr-2" />
@@ -369,14 +365,9 @@ export const Dashboard: React.FC = () => {
                       </a>
                     )}
 
-                    {isLoadingGalxe ? (
-                      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-                        <p className="text-gray-600">Checking for Galxe Passport...</p>
-                      </div>
-                    ) : hasGalxePassport && (
+                    {hasGalxePassport && (
                       <div className="group bg-white border border-gray-200 rounded-lg p-5 shadow-sm block transition-all duration-300">
                         <div className="flex flex-col md:flex-row md:items-start">
-                          {/* Logo and title section - keep together in responsive */}
                           <div className="flex items-start mb-2 md:mb-0">
                             <div className="mr-4 flex-shrink-0">
                               <svg width="1096" height="1096" viewBox="0 0 1096 1096" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
@@ -411,7 +402,6 @@ export const Dashboard: React.FC = () => {
                               between your identity and your wallet, meaning it
                               allows you to only trade some of the assets on Rayls.
                             </p>
-                            {/* Stats section - shows inline on mobile, to the right on desktop */}
                             <div className="mb-4 md:hidden">
                               <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg inline-flex items-center">
                                 <Users size={16} className="text-[#b388ff] mr-2" />
@@ -420,7 +410,6 @@ export const Dashboard: React.FC = () => {
                                 </p>
                               </div>
                             </div>
-                            {/* Verify onchain and More info buttons */}
                             <div className="mt-4 flex items-center space-x-6">
                               <a
                                 href={`https://bscscan.com/token/0xe84050261cb0a35982ea0f6f3d9dff4b8ed3c012?a=${primaryWallet?.address}`}
@@ -436,7 +425,6 @@ export const Dashboard: React.FC = () => {
                               </a>
                             </div>
                           </div>
-                          {/* Stats section - hidden on mobile, shown on desktop */}
                           <div className="hidden md:flex md:items-center md:ml-4">
                             <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg flex items-center">
                               <Users size={16} className="text-[#b388ff] mr-2" />
@@ -450,44 +438,46 @@ export const Dashboard: React.FC = () => {
                         </div>
                       </div>
                     )}
-                  </div>
-                ) : (
-                  !isLoadingGalxe &&
-                  !hasGalxePassport && (
-                    <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-                      <p className="text-gray-600">
-                        You currently have no attestations to your connected
-                        wallet address to enable you to transact on Rayls.
-                      </p>
-                    </div>
-                  )
+                    
+                    {noAttestationsFound && (
+                      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+                        <p className="text-gray-600">
+                          You currently have no attestations to your connected
+                          wallet address to enable you to transact on Rayls.
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
-
-                <div className="flex flex-wrap gap-4 mt-6">
-                  <button
-                    onClick={handleCreateAttestation}
-                    className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
-                  >
-                    <Plus size={18} className="mr-2" />
-                    Create attestation
-                  </button>
-                  <button
-                    onClick={() => navigate('/validate-microdeposits')}
-                    className="border border-[#b388ff] text-[#b388ff] hover:bg-[#b388ff]/10 font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
-                  >
-                    <CheckCircle size={18} className="mr-2" />
-                    Validate microdeposits
-                  </button>
-                  <a
-                    href="https://rayls.io/attestations"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-black hover:text-gray-800 font-medium py-3 px-6 rounded-lg inline-flex items-center transition-colors text-sm border border-black hover:border-gray-800"
-                  >
-                    <ExternalLink size={16} className="mr-2" />
-                    Learn more about attestations
-                  </a>
-                </div>
+              </div>
+              
+              <div className="flex flex-wrap gap-4 mt-6">
+                <button
+                  onClick={handleCreateAttestation}
+                  className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
+                >
+                  <Plus size={18} className="mr-2" />
+                  Create attestation
+                </button>
+                <button
+                  onClick={() => navigate('/validate-microdeposits')}
+                  className="border border-[#b388ff] text-[#b388ff] hover:bg-[#b388ff]/10 font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
+                >
+                  <CheckCircle size={18} className="mr-2" />
+                  Validate microdeposits
+                </button>
+                <a
+                  href="https://dash.readme.com/project/parfin-rayls/v2.3.1/docs/rayls-testnet-attestations"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center rounded-lg border border-black py-2 px-4 text-sm font-medium text-black transition-colors hover:border-gray-800 hover:text-gray-800"
+                >
+                  Learn more about attestations
+                  <ArrowRight
+                    size={16}
+                    className="ml-2 transition-transform group-hover:translate-x-1"
+                  />
+                </a>
               </div>
             </div>
             {/* Action Tiles */}

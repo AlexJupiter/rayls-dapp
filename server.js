@@ -1,8 +1,9 @@
 import express from 'express';
 import path from 'path';
-import axios from 'axios';
-import { ethers } from 'ethers';
 import { fileURLToPath } from 'url';
+import cors from 'cors';
+import { ethers } from 'ethers';
+import axios from 'axios';
 import dotenv from 'dotenv';
 import Stripe from 'stripe';
 import pg from 'pg';
@@ -16,45 +17,83 @@ const pool = new Pool({
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const app = express();
-const PORT = process.env.PORT || 8080;
-
-// Middleware
-app.use(express.json());
 
 // --- CONFIGURATION ---
 const STATIC_IP_PROXY_ENDPOINT = 'http://159.223.246.173/';
 const EAS_GRAPHQL_ENDPOINT = 'https://base.easscan.org/graphql';
 const SCHEMA_UID = '0xf8b05c79f090979bf4a80270aba232dff11a10d9ca55c4f88de95317970f0de9';
 const GQL_QUERY = `
-  query ConfirmVerifiedAccount($recipient: String!, $schemaId: String!) {
-    attestations(
-      where: {
-        AND: [
-          { recipient: { equals: $recipient } },
-          { schemaId: { equals: $schemaId } },
-          { revoked: { equals: false } }
-        ]
-      },
-      take: 1
-    ) { id }
-  }
+    query ConfirmVerifiedAccount($recipient: String!, $schemaId: String!) {
+      attestations(
+        where: {
+          AND: [
+            { recipient: { equals: $recipient } }
+            { schemaId: { equals: $schemaId } }
+            { revoked: { equals: false } }
+          ]
+        }
+        take: 1
+      ) {
+        id
+      }
+    }
 `;
 
-const BAB_CONTRACT_ADDRESS = '0x2B09d47D550061f995A3b5C6F0Ae5ae455EB7d83';
+const BAB_CONTRACT_ADDRESS = "0x2b09d47d550061f995a3b5c6f0fd58005215d7c8";
 const BAB_ABI = ["function balanceOf(address owner) view returns (uint256)"];
 const BSC_RPC_ENDPOINT = "https://bsc-dataseed.binance.org/";
 
-const GALXE_PASSPORT_CONTRACT_ADDRESS = "0xe8405c261cb0a35982ea0f6f3d9dff4b8ed3c012";
+const GALXE_PASSPORT_CONTRACT_ADDRESS = "0xe84050261cb0a35982ea0f6f3d9dff4b8ed3c012";
 const GALXE_PASSPORT_ABI = [
   "function balanceOf(address owner) view returns (uint256)"
 ];
 
-// --- Serve Static Files ---
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const port = process.env.PORT || 8080;
+
+// --- MIDDLEWARE ---
+app.use(cors());
 app.use(express.static(path.join(__dirname, 'dist')));
+
+// Stripe webhook needs raw body
+app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.log(`Webhook signature verification failed.`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === 'setup_intent.succeeded') {
+    const setupIntent = event.data.object;
+    const clientReferenceId = setupIntent.metadata.client_reference_id;
+    const stripeCustomerId = setupIntent.customer;
+
+    if (clientReferenceId && stripeCustomerId) {
+      try {
+        await pool.query(
+          'INSERT INTO verifications (wallet_address, stripe_customer_id) VALUES ($1, $2) ON CONFLICT (wallet_address) DO UPDATE SET stripe_customer_id = $2',
+          [clientReferenceId, stripeCustomerId]
+        );
+        console.log(`Successfully saved verification for wallet: ${clientReferenceId}`);
+      } catch (dbError) {
+        console.error('Database error on webhook processing:', dbError);
+      }
+    }
+  }
+
+  res.status(200).send();
+});
+
+app.use(express.json());
+
 
 // --- Helper Functions ---
 async function checkBinanceAttestation(address) {
@@ -85,9 +124,18 @@ async function checkGalxePassport(address) {
 
 // Endpoint for the frontend to check for the Binance BAB token
 app.get('/api/check-bab-token/:address', async (req, res) => {
-  const { address } = req.params;
-  const hasToken = await checkBinanceAttestation(address);
-  res.json({ hasToken });
+    const { address } = req.params;
+    if (!ethers.isAddress(address)) {
+        return res.status(400).json({ error: 'Invalid Ethereum address' });
+    }
+
+    try {
+        const hasToken = await checkBinanceAttestation(address);
+        return res.json({ hasToken });
+    } catch (error) {
+        console.error('Error checking BAB token balance:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // Endpoint for the frontend to check for the Galxe Passport NFT
@@ -166,107 +214,84 @@ app.post('/api/verify-microdeposits', async (req, res) => {
   }
 });
 
-// --- Webhook Handler ---
-app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  let event;
-
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch (err) {
-    console.log(`Webhook signature verification failed.`);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  if (event.type === 'setup_intent.succeeded') {
-    const setupIntent = event.data.object;
-    const clientReferenceId = setupIntent.metadata.client_reference_id;
-    const stripeCustomerId = setupIntent.customer;
-
-    if (clientReferenceId && stripeCustomerId) {
-      try {
-        await pool.query(
-          'INSERT INTO verifications (wallet_address, stripe_customer_id, status) VALUES ($1, $2, $3) ON CONFLICT (wallet_address) DO UPDATE SET stripe_customer_id = $2, status = $3',
-          [clientReferenceId, stripeCustomerId, 'verified']
-        );
-        console.log(`Successfully saved verification for wallet: ${clientReferenceId}`);
-        // await issueBankVerifiedAttestation(clientReferenceId);
-      } catch (dbError) {
-        console.error('Database error on webhook processing:', dbError);
-      }
-    }
-  }
-
-  res.status(200).send();
-});
 
 // --- RPC Proxy Logic ---
+
 app.post('/rpc', async (req, res) => {
-  const { id, method, params } = req.body;
+    const { id, method, params } = req.body;
 
-  if (method === 'eth_sendRawTransaction') {
-    try {
-      const tx = ethers.Transaction.from(params[0]);
-      const userAddress = tx.from;
+    // --- ATTESTATION CHECK FOR TRANSACTIONS ---
+    if (method === 'eth_sendRawTransaction') {
+        try {
+            // 1. Decode the transaction to get the sender's address
+            const tx = ethers.Transaction.from(params[0]);
+            const userAddress = tx.from;
 
-      const gqlResponse = await axios.post(EAS_GRAPHQL_ENDPOINT, {
-        query: GQL_QUERY,
-        variables: { recipient: userAddress, schemaId: SCHEMA_UID }
-      });
+            // 2. Perform the GraphQL check for Coinbase attestation
+            let hasCoinbaseAttestation = false;
+            try {
+                const gqlResponse = await axios.post(EAS_GRAPHQL_ENDPOINT, {
+                    query: GQL_QUERY,
+                    variables: {
+                        recipient: userAddress,
+                        schemaId: SCHEMA_UID,
+                    }
+                });
+                const attestations = gqlResponse.data.data.attestations;
+                if (attestations && attestations.length > 0) {
+                    hasCoinbaseAttestation = true;
+                }
+            } catch (gqlError) {
+                console.error("Coinbase attestation check failed:", gqlError);
+            }
 
-      const hasCoinbaseAttestation = gqlResponse.data.data.attestations && gqlResponse.data.data.attestations.length > 0;
 
-      if (!hasCoinbaseAttestation) {
-        console.log(`Coinbase attestation not found for ${userAddress}. Checking for Binance attestation...`);
-        const hasBinance = await checkBinanceAttestation(userAddress);
-        if (!hasBinance) {
-          console.log(`Binance attestation not found for ${userAddress}. Checking for Galxe Passport...`);
-          const hasGalxe = await checkGalxePassport(userAddress);
-          if (!hasGalxe) {
-            console.log(`Verification FAILED for address: ${userAddress}. No valid attestation found.`);
-            return res.json({
-              jsonrpc: '2.0',
-              id,
-              error: {
-                code: -32602,
-                message: 'Permission Denied: Address does not have the required attestation.'
+            if (!hasCoinbaseAttestation) {
+              console.log(`Coinbase attestation not found for ${userAddress}. Checking for Binance attestation...`);
+              const hasBinance = await checkBinanceAttestation(userAddress);
+              if (!hasBinance) {
+                console.log(`Binance attestation not found for ${userAddress}. Checking for Galxe Passport...`);
+                const hasGalxe = await checkGalxePassport(userAddress);
+                if (!hasGalxe) {
+                  console.log(`Verification FAILED for address: ${userAddress}. No valid attestation found.`);
+                  return res.json({
+                    jsonrpc: '2.0',
+                    id,
+                    error: {
+                      code: -32602,
+                      message: 'Permission Denied: Address does not have the required attestation.'
+                    }
+                  });
+                }
               }
+            }
+            
+            console.log(`Verification SUCCEEDED for address: ${userAddress}`);
+            
+          } catch (error) {
+            console.error("Attestation check failed:", error);
+            return res.status(500).json({
+                jsonrpc: '2.0',
+                id,
+                error: { code: -32603, message: 'Internal error during attestation check.' }
             });
-          }
         }
-      }
-      
-      console.log(`Verification SUCCEEDED for address: ${userAddress}`);
-      
-    } catch (error) {
-      console.error("Attestation check failed:", error);
-      return res.status(500).json({
-        jsonrpc: '2.0',
-        id,
-        error: { code: -32603, message: 'Internal error during attestation check.' }
-      });
     }
-  }
 
-  try {
-    const response = await axios.post(STATIC_IP_PROXY_ENDPOINT, req.body, {
-      headers: { 'Content-Type': 'application/json' }
-    });
-    res.status(response.status).json(response.data);
-  } catch (error) {
-    console.error("Error forwarding RPC request:", error.message);
-    const status = error.response ? error.response.status : 500;
-    const data = error.response ? error.response.data : { error: "Internal proxy error" };
-    res.status(status).json(data);
-  }
+    try {
+        const response = await axios.post(STATIC_IP_PROXY_ENDPOINT, req.body);
+        return res.status(response.status).json(response.data);
+    } catch (error) {
+        console.error("RPC Proxy failed:", error);
+        return res.status(500).json({ error: 'Internal proxy error' });
+    }
 });
 
-// --- Catch-all for Frontend Routing ---
+// --- SERVE REACT APP ---
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-// --- Server Start ---
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 }); 
