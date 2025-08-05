@@ -19,6 +19,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 
 // --- CONFIGURATION ---
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 const STATIC_IP_PROXY_ENDPOINT = 'http://159.223.246.173/';
 const EAS_GRAPHQL_ENDPOINT = 'https://base.easscan.org/graphql';
 const SCHEMA_UID = '0xf8b05c79f090979bf4a80270aba232dff11a10d9ca55c4f88de95317970f0de9';
@@ -164,8 +165,8 @@ app.post('/api/create-stripe-session', async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['us_bank_account'],
       mode: 'setup',
-      success_url: `http://localhost:5173/validate-microdeposits?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `http://localhost:5173/dashboard?stripe_verification=cancel`,
+      success_url: `${FRONTEND_URL}/validate-microdeposits?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${FRONTEND_URL}/dashboard?stripe_verification=cancel`,
       setup_intent_data: {
         metadata: {
           client_reference_id: userWalletAddress,
