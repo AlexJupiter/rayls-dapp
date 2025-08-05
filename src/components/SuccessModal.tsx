@@ -4,11 +4,13 @@ import Confetti from 'react-confetti'
 interface SuccessModalProps {
   title: string
   subtitle: string
+  link?: string
   onClose: () => void
 }
 export const SuccessModal: React.FC<SuccessModalProps> = ({
   title,
   subtitle,
+  link,
   onClose,
 }) => {
   const [windowSize, setWindowSize] = useState({
@@ -25,6 +27,26 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  const subtitleParts = subtitle.split('here');
+  const subtitleWithLink =
+    subtitleParts.length > 1 && link ? (
+      <span>
+        {subtitleParts[0]}
+        <a
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#635BFF] font-medium underline hover:opacity-80"
+        >
+          here
+        </a>
+        {subtitleParts[1]}
+      </span>
+    ) : (
+      subtitle
+    );
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <Confetti
@@ -60,7 +82,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
             </svg>
           </div>
           <h3 className="text-xl font-bold text-gray-900">{title}</h3>
-          <p className="text-gray-600 mt-2">{subtitle}</p>
+          <p className="text-gray-600 mt-2">{subtitleWithLink}</p>
         </div>
         <div className="flex justify-center">
           <button

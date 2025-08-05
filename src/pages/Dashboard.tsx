@@ -41,6 +41,7 @@ export const Dashboard: React.FC = () => {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successLink, setSuccessLink] = useState('');
 
   const handleCreateAttestation = async (countryCode: string) => {
     if (!primaryWallet) return;
@@ -71,12 +72,13 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     // Check for the success query parameter on component mount
     const params = new URLSearchParams(window.location.search);
-    if (params.get('verification_status') === 'success') {
+    if (params.get('verification_status') === 'success' && primaryWallet) {
+      setSuccessLink(`https://sepolia.easscan.org/address/${primaryWallet.address}`);
       setShowSuccessModal(true);
       // Optional: remove the query parameter from the URL
       navigate('/dashboard', { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, primaryWallet]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -213,6 +215,7 @@ export const Dashboard: React.FC = () => {
         <SuccessModal
           title="You've successfully verified your identity to transact on Rayls!"
           subtitle="Check the status of your onchain attestation here. Refresh the page in a few minutes to see your attestation in the Rayls dashboard."
+          link={successLink}
           onClose={() => setShowSuccessModal(false)}
         />
       )}
