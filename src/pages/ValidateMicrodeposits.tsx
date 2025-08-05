@@ -22,11 +22,17 @@ export const ValidateMicrodeposits: React.FC = () => {
         return;
       }
       try {
-        const response = await axios.get(`/api/get-setup-intent-from-session?sessionId=${sessionId}`);
-        const intentId = response.data?.setupIntentId;
+        const response = await axios.get(`/api/get-setup-intent?sessionId=${sessionId}`);
+        const { setupIntentId, status } = response.data;
+
+        if (status === 'succeeded') {
+          // If already succeeded (e.g., via instant verification), redirect immediately.
+          navigate('/dashboard?verification_status=success');
+          return;
+        }
         
-        if (intentId) {
-          setSetupIntentId(intentId);
+        if (setupIntentId) {
+          setSetupIntentId(setupIntentId);
         } else {
           setError('Could not retrieve a valid Setup Intent ID. Please try creating the attestation again.');
         }

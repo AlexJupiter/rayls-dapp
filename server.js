@@ -130,6 +130,19 @@ async function checkGalxePassport(address) {
   }
 }
 
+async function checkStripeVerification(address) {
+  try {
+    const result = await pool.query(
+      'SELECT id FROM verifications WHERE wallet_address = $1 AND status = $2',
+      [address, 'verified']
+    );
+    return result.rowCount > 0;
+  } catch (error) {
+    console.error(`Database check failed for address ${address}:`, error);
+    return false;
+  }
+}
+
 // --- API Endpoints ---
 
 // Endpoint for the frontend to check for the Binance BAB token
@@ -153,6 +166,25 @@ app.get('/api/check-galxe-passport/:address', async (req, res) => {
   const { address } = req.params;
   const hasPassport = await checkGalxePassport(address);
   res.json({ hasPassport });
+});
+
+app.get('/api/get-setup-intent', async (req, res) => {
+  try {
+    const { sessionId } = req.query;
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID is required.' });
+    }
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const setupIntentId = session.setup_intent;
+    if (!setupIntentId) {
+      return res.status(404).json({ error: 'Setup Intent not found for this session.' });
+    }
+    const setupIntent = await stripe.setupIntents.retrieve(setupIntentId);
+    res.json({ setupIntentId: setupIntent.id, status: setupIntent.status });
+  } catch (error)    {
+    console.error('Error retrieving session:', error);
+    res.status(500).json({ error: 'Failed to retrieve session details.' });
+  }
 });
 
 app.get('/api/get-setup-intent-from-session', async (req, res) => {
@@ -273,15 +305,19 @@ app.post('/rpc', async (req, res) => {
                 console.log(`Binance attestation not found for ${userAddress}. Checking for Galxe Passport...`);
                 const hasGalxe = await checkGalxePassport(userAddress);
                 if (!hasGalxe) {
-                  console.log(`Verification FAILED for address: ${userAddress}. No valid attestation found.`);
-                  return res.json({
-                    jsonrpc: '2.0',
-                    id,
-                    error: {
-                      code: -32602,
-                      message: 'Permission Denied: Address does not have the required attestation.'
-                    }
-                  });
+                  console.log(`Galxe passport not found for ${userAddress}. Checking for Stripe verification...`);
+                  const hasStripeVerification = await checkStripeVerification(userAddress);
+                  if (!hasStripeVerification) {
+                    console.log(`Verification FAILED for address: ${userAddress}. No valid attestation or verification found.`);
+                    return res.json({
+                      jsonrpc: '2.0',
+                      id,
+                      error: {
+                        code: -32602,
+                        message: 'Permission Denied: Address does not have the required attestation or verification.'
+                      }
+                    });
+                  }
                 }
               }
             }
