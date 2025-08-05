@@ -171,17 +171,17 @@ export const Dashboard: React.FC = () => {
               <div className="flex flex-col md:flex-row justify-between p-6">
                 {/* Welcome text section */}
                 <div className="md:max-w-[65%] mb-6 md:mb-0">
-                  <h2 className="text-2xl font-bold mb-3 flex items-center">
-                    <span className="mr-2">👋</span> Welcome to the Rayls Testnet
-                    Dashboard
-                  </h2>
+                <h2 className="text-2xl font-bold mb-3 flex items-center">
+                  <span className="mr-2">👋</span> Welcome to the Rayls Testnet
+                  Dashboard
+                </h2>
                   <p className="mb-4">
-                    Rayls is a high-performance public & private EVM blockchain
-                    system built for RWA, with native compliance and governance
-                    controls. To use the Rayls Public Testnet you must have a
-                    valid attestation to your connected wallet address.
-                  </p>
-                </div>
+                  Rayls is a high-performance public & private EVM blockchain
+                  system built for RWA, with native compliance and governance
+                  controls. To use the Rayls Public Testnet you must have a
+                  valid attestation to your connected wallet address.
+                </p>
+              </div>
                 {/* Stats section */}
                 <div className="md:w-[30%] flex flex-col justify-center bg-white rounded-xl p-5 self-center">
                   <a 
@@ -263,15 +263,15 @@ export const Dashboard: React.FC = () => {
                                   </clipPath>
                                 </defs>
                               </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="font-semibold text-lg mr-2">
+                              Coinbase Verified Account
+                            </h3>
                           </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <h3 className="font-semibold text-lg mr-2">
-                                Coinbase Verified Account
-                              </h3>
-                            </div>
                             <p className="text-gray-600 text-sm mb-2">
-                              Your Coinbase account has been verified and attested
+                            Your Coinbase account has been verified and attested
                               onchain.
                             </p>
                             <p className="text-gray-500 text-xs mb-3">
@@ -343,8 +343,8 @@ export const Dashboard: React.FC = () => {
                                 </p>
                               </div>
                             </div>
-                            <div className="mt-4 flex items-center text-black text-sm font-medium">
-                                Verify onchain{' '}
+                          <div className="mt-4 flex items-center text-black text-sm font-medium">
+                            Verify onchain{' '}
                                 <ArrowRight
                                   size={14}
                                   className="ml-1 group-hover:translate-x-1 transition-transform"
@@ -456,7 +456,7 @@ export const Dashboard: React.FC = () => {
                   onClick={handleCreateAttestation}
                   className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
                 >
-                  <Plus size={18} className="mr-2" />
+                      <Plus size={18} className="mr-2" />
                   Create attestation
                 </button>
                 <button
@@ -465,7 +465,7 @@ export const Dashboard: React.FC = () => {
                 >
                   <CheckCircle size={18} className="mr-2" />
                   Validate microdeposits
-                </button>
+                    </button>
                 <a
                   href="https://dash.readme.com/project/parfin-rayls/v2.3.1/docs/rayls-testnet-attestations"
                   target="_blank"

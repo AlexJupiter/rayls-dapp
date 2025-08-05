@@ -162,13 +162,23 @@ app.post('/api/create-stripe-session', async (req, res) => {
   const { userWalletAddress } = req.body;
 
   try {
+    // 1. Create a new Customer in Stripe
+    const customer = await stripe.customers.create({
+      metadata: {
+        wallet_address: userWalletAddress,
+      },
+    });
+
+    // 2. Create a Checkout Session for that new customer
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['us_bank_account'],
       mode: 'setup',
+      customer: customer.id,
       success_url: `${FRONTEND_URL}/validate-microdeposits?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${FRONTEND_URL}/dashboard?stripe_verification=cancel`,
       setup_intent_data: {
         metadata: {
+          // We still use this for the webhook as it's easily accessible
           client_reference_id: userWalletAddress,
         },
       },

@@ -16,13 +16,13 @@ export function App() {
       }}
     >
       <BrowserRouter>
-        <Layout>
-          <Routes>
+      <Layout>
+        <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/validate-microdeposits" element={<ValidateMicrodeposits />} />
-          </Routes>
-        </Layout>
+        </Routes>
+      </Layout>
       </BrowserRouter>
     </DynamicContextProvider>
   );
