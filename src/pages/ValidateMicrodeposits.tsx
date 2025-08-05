@@ -1,15 +1,43 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { DynamicWidget } from '@dynamic-labs/sdk-react-core';
 
 export const ValidateMicrodeposits: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [deposit1, setDeposit1] = useState('');
   const [deposit2, setDeposit2] = useState('');
   const [setupIntentId, setSetupIntentId] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [isVerifying, setIsVerifying] = useState(false);
+
+  useEffect(() => {
+    const fetchSetupIntent = async () => {
+      const sessionId = searchParams.get('session_id');
+      if (!sessionId) {
+        setError('Checkout session ID is missing from the URL.');
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const response = await axios.get(`/api/get-setup-intent-from-session?sessionId=${sessionId}`);
+        const intentId = response.data?.setupIntentId;
+        
+        if (intentId) {
+          setSetupIntentId(intentId);
+        } else {
+          setError('Could not retrieve a valid Setup Intent ID. Please try creating the attestation again.');
+        }
+      } catch (err) {
+        setError('Could not retrieve setup details. Please try the process again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSetupIntent();
+  }, [searchParams]);
 
   const handleCancel = () => {
     navigate('/dashboard');
@@ -17,7 +45,7 @@ export const ValidateMicrodeposits: React.FC = () => {
 
   const handleConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!deposit1 || !deposit2 || !setupIntentId) {
+    if (!deposit1 || !deposit2) {
       setError('Please fill in all fields.');
       return;
     }
@@ -59,81 +87,73 @@ export const ValidateMicrodeposits: React.FC = () => {
           <div className="max-w-3xl mx-auto">
             {/* Main content */}
             <div className="bg-[#f0ebff] text-black relative overflow-hidden rounded-xl p-8">
-              <h1 className="text-2xl font-bold mb-4">
-                Validate microdeposits
-              </h1>
-              <p className="text-gray-600 mb-8">
-                After requesting the microdeposits, you then need to wait 1-2
-                days for the payments to appear in your account. Once they've
-                appeared, input the amounts below.
-              </p>
-              <form onSubmit={handleConfirm} className="space-y-6">
-                <div>
-                  <label
-                    htmlFor="setupIntentId"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Setup Intent ID
-                  </label>
-                  <input
-                    type="text"
-                    id="setupIntentId"
-                    value={setupIntentId}
-                    onChange={(e) => setSetupIntentId(e.target.value)}
-                    placeholder="seti_..."
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#b388ff] focus:border-[#b388ff] outline-none"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="deposit1"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    First microdeposit amount ($)
-                  </label>
-                  <input
-                    type="text"
-                    id="deposit1"
-                    value={deposit1}
-                    onChange={(e) => setDeposit1(e.target.value)}
-                    placeholder="0.32"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#b388ff] focus:border-[#b388ff] outline-none"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="deposit2"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Second microdeposit amount ($)
-                  </label>
-                  <input
-                    type="text"
-                    id="deposit2"
-                    value={deposit2}
-                    onChange={(e) => setDeposit2(e.target.value)}
-                    placeholder="0.45"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#b388ff] focus:border-[#b388ff] outline-none"
-                  />
-                </div>
-                {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-                <div className="flex flex-wrap gap-4 mt-8">
-                  <button
-                    type="button"
-                    onClick={handleCancel}
-                    className="border border-gray-300 text-gray-700 hover:bg-gray-100 font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isVerifying}
-                    className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors disabled:bg-gray-400"
-                  >
-                    {isVerifying ? 'Confirming...' : 'Confirm'}
-                  </button>
-                </div>
-              </form>
+              {isLoading ? (
+                <p>Loading verification details...</p>
+              ) : error && !setupIntentId ? (
+                <p className="text-red-500">{error}</p>
+              ) : (
+                <>
+                  <h1 className="text-2xl font-bold mb-4">
+                    Validate microdeposits
+                  </h1>
+                  <p className="text-gray-600 mb-8">
+                    After requesting the microdeposits, you then need to wait 1-2
+                    days for the payments to appear in your account. Once they've
+                    appeared, input the amounts below.
+                  </p>
+                  <form onSubmit={handleConfirm} className="space-y-6">
+                    <div>
+                      <label
+                        htmlFor="deposit1"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        First microdeposit amount ($)
+                      </label>
+                      <input
+                        type="text"
+                        id="deposit1"
+                        value={deposit1}
+                        onChange={(e) => setDeposit1(e.target.value)}
+                        placeholder="0.32"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#b388ff] focus:border-[#b388ff] outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="deposit2"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Second microdeposit amount ($)
+                      </label>
+                      <input
+                        type="text"
+                        id="deposit2"
+                        value={deposit2}
+                        onChange={(e) => setDeposit2(e.target.value)}
+                        placeholder="0.45"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#b388ff] focus:border-[#b388ff] outline-none"
+                      />
+                    </div>
+                    {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+                    <div className="flex flex-wrap gap-4 mt-8">
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        className="border border-gray-300 text-gray-700 hover:bg-gray-100 font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isVerifying || isLoading || !setupIntentId}
+                        className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors disabled:bg-gray-400"
+                      >
+                        {isVerifying ? 'Confirming...' : 'Confirm'}
+                      </button>
+                    </div>
+                  </form>
+                </>
+              )}
             </div>
           </div>
         </div>

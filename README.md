@@ -128,3 +128,78 @@ To use the attestation-gated transaction feature with your local development set
     *   **Block Explorer URL**: `https://rayls-test-chain.explorer.caldera.xyz/`
 
 Once added, MetaMask will send all requests for this network through your local proxy. You will be able to see your balance, but transactions will only succeed if your connected wallet has the required Coinbase attestation.
+
+If you encounter any issues with deployment, please refer to the [Digital Ocean App Platform documentation](https://docs.digitalocean.com/products/app-platform/).
+
+## Running Locally
+
+To run the application on your local machine, follow these steps:
+
+### Prerequisites
+
+- Node.js (version 18 or higher)
+- npm (or your preferred package manager)
+- A running PostgreSQL database instance
+- A Stripe account and API keys
+
+### 1. Clone the Repository
+
+Clone this repository to your local machine:
+
+```bash
+git clone https://github.com/AlexJupiter/rayls-dapp.git
+cd rayls-dapp
+```
+
+### 2. Install Dependencies
+
+Install the project dependencies using npm:
+
+```bash
+npm install
+```
+
+### 3. Set Up Environment Variables
+
+The backend server requires several environment variables to function correctly. Create a `.env` file in the root of the project and add the following variables:
+
+```
+DATABASE_URL="postgresql://user:password@host:port/database"
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+```
+
+- **`DATABASE_URL`**: Your PostgreSQL connection string.
+- **`STRIPE_SECRET_KEY`**: Your secret API key from your Stripe Dashboard.
+- **`STRIPE_WEBHOOK_SECRET`**: The webhook signing secret. For local testing, you can obtain this by using the Stripe CLI to forward events: `stripe listen --forward-to http://localhost:8080/webhooks/stripe`.
+
+### 4. Set Up the Database
+
+Connect to your PostgreSQL instance and run the following SQL command to create the necessary `verifications` table:
+
+```sql
+CREATE TABLE verifications (
+  id SERIAL PRIMARY KEY,
+  wallet_address VARCHAR(42) NOT NULL UNIQUE,
+  stripe_customer_id VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 5. Run the Backend Server
+
+Start the backend Express server, which handles API requests and the RPC proxy. It will run on `http://localhost:8080`.
+
+```bash
+npm run start
+```
+
+### 6. Run the Frontend Development Server
+
+In a separate terminal, start the Vite development server for the React frontend. It will run on `http://localhost:5173`.
+
+```bash
+npm run dev
+```
+
+You can now access the application by navigating to `http://localhost:5173` in your web browser. The frontend will automatically proxy API requests to the backend server.
