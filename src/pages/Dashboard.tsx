@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { CountrySelectionModal } from '../components/CountrySelectionModal';
+import { SuccessModal } from '../components/SuccessModal';
 
 const STRIPE_SCHEMA_UID = "0x120379ab9665d06dd367526f95f3f5c55ed3f419f7d957e7f8ec233db9ce28bc";
 
@@ -39,6 +40,7 @@ export const Dashboard: React.FC = () => {
   const [stats, setStats] = useState({ totalWallets: '...', totalTransactions: '...' });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleCreateAttestation = async (countryCode: string) => {
     if (!primaryWallet) return;
@@ -65,6 +67,16 @@ export const Dashboard: React.FC = () => {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    // Check for the success query parameter on component mount
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('verification_status') === 'success') {
+      setShowSuccessModal(true);
+      // Optional: remove the query parameter from the URL
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -197,6 +209,13 @@ export const Dashboard: React.FC = () => {
   const noAttestationsFound = !isLoadingAttestation && !isLoadingBinance && !isLoadingGalxe && !isLoadingStripe && !coinbaseAttestationId && !hasBinanceAttestation && !hasGalxePassport && !stripeAttestationId;
   
   return <div className="min-h-screen bg-[#121212] text-white">
+      {showSuccessModal && (
+        <SuccessModal
+          title="You've successfully verified your identity to transact on Rayls!"
+          subtitle="Check the status of your onchain attestation here. Refresh the page in a few minutes to see your attestation in the Rayls dashboard."
+          onClose={() => setShowSuccessModal(false)}
+        />
+      )}
       <CountrySelectionModal
         isOpen={isCountryModalOpen}
         onClose={() => setIsCountryModalOpen(false)}
