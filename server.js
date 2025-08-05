@@ -11,9 +11,18 @@ import pg from 'pg';
 dotenv.config();
 
 const { Pool } = pg;
-const pool = new Pool({
+
+const poolConfig = {
   connectionString: process.env.DATABASE_URL,
-});
+};
+
+// For local development, allow self-signed certificates.
+// In production (on Digital Ocean), NODE_ENV will be 'production' and this block will be skipped.
+if (process.env.NODE_ENV !== 'production') {
+  poolConfig.ssl = { rejectUnauthorized: false };
+}
+
+const pool = new Pool(poolConfig);
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -80,8 +89,8 @@ app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async (r
     if (clientReferenceId && stripeCustomerId) {
       try {
         await pool.query(
-          'INSERT INTO verifications (wallet_address, stripe_customer_id) VALUES ($1, $2) ON CONFLICT (wallet_address) DO UPDATE SET stripe_customer_id = $2',
-          [clientReferenceId, stripeCustomerId]
+          'INSERT INTO verifications (wallet_address, stripe_customer_id, status) VALUES ($1, $2, $3) ON CONFLICT (wallet_address) DO UPDATE SET stripe_customer_id = $2, status = $3',
+          [clientReferenceId, stripeCustomerId, 'verified']
         );
         console.log(`Successfully saved verification for wallet: ${clientReferenceId}`);
       } catch (dbError) {
