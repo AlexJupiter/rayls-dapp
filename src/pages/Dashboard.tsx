@@ -324,15 +324,6 @@ export const Dashboard: React.FC = () => {
                               This is using your existing KYC with your bank and is
                               extremely trusted.
                             </p>
-                            {/* Stats section - shows inline on mobile, to the right on desktop */}
-                            <div className="mb-4 md:hidden">
-                              <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg inline-flex items-center">
-                                <Users size={16} className="text-[#b388ff] mr-2" />
-                                <p className="text-xs text-gray-600">
-                                  Over 300,000 accounts have this attestation
-                                </p>
-                              </div>
-                            </div>
                             {/* Verify onchain and More info buttons */}
                             <div className="mt-4 flex items-center space-x-6">
                               <a
@@ -350,16 +341,6 @@ export const Dashboard: React.FC = () => {
                             </div>
                           </div>
                           {/* Stats section - hidden on mobile, shown on desktop */}
-                          <div className="hidden md:flex md:items-center md:ml-4">
-                            <div className="bg-[#f8f5ff] border border-[#e7e3f5] px-4 py-3 rounded-lg flex items-center">
-                              <Users size={16} className="text-[#b388ff] mr-2" />
-                              <p className="text-xs text-gray-600 whitespace-nowrap">
-                                Over 300,000 accounts
-                                <br />
-                                have this attestation
-                              </p>
-                            </div>
-                          </div>
                         </div>
                       </a>
                     )}
