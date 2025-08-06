@@ -60,13 +60,11 @@ graph TD
     A -- "Checks for BAB Token via API call" --> B;
     A -- "Checks for Galxe Passport via API call" --> B;
     A -- "Fetches testnet stats" --> I;
-    A -- "1. User initiates Stripe verification" --> B;
-    B -- "2. Creates Stripe Checkout Session" --> M;
-    B -- "3. Redirects user to Stripe" --> A;
-    A -- "4. User completes bank auth" --> M;
-    M -- "5. Sends webhook to backend" --> B;
-    B -- "6. Verifies webhook & triggers attestation" --> O;
-    O -- "7. Issues attestation on Sepolia via EAS" --> N;
+    A -- "Initiates Stripe verification" --> B;
+    B -- "Creates Stripe Session" --> M;
+    M -- "User completes auth flow &<br/>Stripe sends webhook" --> B;
+    B -- "Triggers attestation" --> O;
+    O -- "Issues on-chain attestation" --> N;
     H -- "RPC Requests" --> B;
     B -- "Forwards requests via Public IP" --> P;
     P -- "Forwards requests to" --> D;
