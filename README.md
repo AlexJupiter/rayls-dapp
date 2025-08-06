@@ -46,7 +46,7 @@ graph TD
         J["Binance Smart Chain RPC"]
         K["BAB Token Contract (BSC)"]
         L["Galxe Passport NFT Contract (BSC)"]
-        M["Stripe API"]
+        M["Stripe API<br/>(Holds user data)"]
         N["Sepolia Testnet (via EAS)"]
     end
 
@@ -59,11 +59,12 @@ graph TD
     A -- "Queries for Coinbase attestation<br/>to display in UI" --> E;
     A -- "Checks for BAB Token via API call" --> B;
     A -- "Checks for Galxe Passport via API call" --> B;
+    A -- "Queries for Stripe attestation<br/>to display in UI" --> N;
     A -- "Fetches testnet stats" --> I;
     A -- "Initiates Stripe verification" --> B;
     B -- "Creates Stripe Session" --> M;
     M -- "User completes auth flow &<br/>Stripe sends webhook" --> B;
-    B -- "Triggers attestation" --> O;
+    B -- "Stripe webhook triggers attestation" --> O;
     O -- "Issues on-chain attestation" --> N;
     H -- "RPC Requests" --> B;
     B -- "Forwards requests via Public IP" --> P;
