@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { CountrySelectionModal } from '../components/CountrySelectionModal';
+import { AttestationModal } from '../components/AttestationModal';
 import { SuccessModal } from '../components/SuccessModal';
 
 const STRIPE_SCHEMA_UID = "0x120379ab9665d06dd367526f95f3f5c55ed3f419f7d957e7f8ec233db9ce28bc";
@@ -39,7 +40,7 @@ export const Dashboard: React.FC = () => {
   const [isLoadingStripe, setIsLoadingStripe] = useState(true);
   const [stats, setStats] = useState({ totalWallets: '...', totalTransactions: '...' });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
-  const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
+  const [isAttestationModalOpen, setIsAttestationModalOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successLink, setSuccessLink] = useState('');
 
@@ -59,7 +60,7 @@ export const Dashboard: React.FC = () => {
     } catch (error) {
       console.error('Failed to create Stripe session:', error);
     } finally {
-      setIsCountryModalOpen(false);
+      setIsAttestationModalOpen(false);
     }
   };
 
@@ -234,10 +235,11 @@ export const Dashboard: React.FC = () => {
           onClose={() => setShowSuccessModal(false)}
         />
       )}
-      <CountrySelectionModal
-        isOpen={isCountryModalOpen}
-        onClose={() => setIsCountryModalOpen(false)}
-        onConfirm={handleCreateAttestation}
+      <AttestationModal
+        isOpen={isAttestationModalOpen}
+        onClose={() => setIsAttestationModalOpen(false)}
+        onVerifyWithBank={handleCreateAttestation}
+        onVerifyWithId={handleCreateIdentitySession}
       />
       <div className="p-6 md:p-8">
         <div className="max-w-6xl mx-auto">
@@ -592,26 +594,12 @@ export const Dashboard: React.FC = () => {
               
               <div className="flex flex-wrap gap-4 mt-6">
                 <button
-                  onClick={() => setIsCountryModalOpen(true)}
+                  onClick={() => setIsAttestationModalOpen(true)}
                   className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
                 >
                       <Plus size={18} className="mr-2" />
-                  Verify with Bank
+                  Create attestation
                 </button>
-                <button
-                  onClick={handleCreateIdentitySession}
-                  className="bg-black hover:bg-gray-800 text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
-                >
-                  <Plus size={18} className="mr-2" />
-                  Verify with ID
-                </button>
-                <button
-                  onClick={() => navigate('/validate-microdeposits')}
-                  className="border border-[#b388ff] text-[#b388ff] hover:bg-[#b388ff]/10 font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
-                >
-                  <CheckCircle size={18} className="mr-2" />
-                  Validate microdeposits
-                    </button>
                 <a
                   href="https://dash.readme.com/project/parfin-rayls/v2.3.1/docs/rayls-testnet-attestations"
                   target="_blank"
