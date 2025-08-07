@@ -91,10 +91,23 @@ app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async (r
     const verificationSession = event.data.object;
     const walletAddress = verificationSession.metadata.user_wallet_address;
 
-    if (walletAddress) {
+    if (walletAddress && verificationSession.last_verification_report) {
       try {
         console.log(`Stripe Identity verification successful for wallet: ${walletAddress}`);
-        const countryCode = verificationSession.verified_outputs?.address?.country || 'N/A';
+        
+        console.log("--- Full VerificationSession Object ---");
+        console.log(JSON.stringify(verificationSession, null, 2));
+        
+        const verificationReport = await stripe.identity.verificationReports.retrieve(
+          verificationSession.last_verification_report
+        );
+        
+        console.log("--- Full VerificationReport Object ---");
+        console.log(JSON.stringify(verificationReport, null, 2));
+        
+        // Prioritize the document's issuing country, fall back to address country
+        const countryCode = verificationReport.document?.issuing_country || verificationSession.verified_outputs?.address?.country || 'N/A';
+        
         await issueStripeAttestation(walletAddress, "identity_document", countryCode);
       } catch (error) {
         console.error('Error during identity webhook processing:', error);
