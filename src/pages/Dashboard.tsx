@@ -62,6 +62,21 @@ export const Dashboard: React.FC = () => {
       setIsCountryModalOpen(false);
     }
   };
+
+  const handleCreateIdentitySession = async () => {
+    if (!primaryWallet) return;
+    try {
+      const response = await axios.post('/api/create-identity-session', {
+        userWalletAddress: primaryWallet.address,
+      });
+      const { url } = response.data;
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Failed to create Stripe Identity session:', error);
+    }
+  };
   
   useEffect(() => {
     if (!isAuthenticated) {
@@ -581,7 +596,14 @@ export const Dashboard: React.FC = () => {
                   className="bg-[#b388ff] hover:bg-[#a070e9] text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
                 >
                       <Plus size={18} className="mr-2" />
-                  Create attestation
+                  Verify with Bank
+                </button>
+                <button
+                  onClick={handleCreateIdentitySession}
+                  className="bg-black hover:bg-gray-800 text-white font-medium py-3 px-6 rounded-lg flex items-center transition-colors"
+                >
+                  <Plus size={18} className="mr-2" />
+                  Verify with ID
                 </button>
                 <button
                   onClick={() => navigate('/validate-microdeposits')}

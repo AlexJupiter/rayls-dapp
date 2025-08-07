@@ -76,14 +76,28 @@ app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async (r
 
     if (clientReferenceId && stripeCustomerId) {
       try {
-        console.log(`Stripe verification successful for wallet: ${clientReferenceId}`);
-        // Attestation is now triggered directly after webhook success.
+        console.log(`Stripe bank verification successful for wallet: ${clientReferenceId}`);
         const customer = await stripe.customers.retrieve(stripeCustomerId);
         const countryCode = customer.metadata.country_code || 'N/A';
-        await issueStripeAttestation(clientReferenceId, countryCode);
+        await issueStripeAttestation(clientReferenceId, "bank_account", countryCode);
 
       } catch (error) {
-        console.error('Error during webhook processing:', error);
+        console.error('Error during bank webhook processing:', error);
+      }
+    }
+  }
+
+  if (event.type === 'identity.verification_session.verified') {
+    const verificationSession = event.data.object;
+    const walletAddress = verificationSession.metadata.user_wallet_address;
+
+    if (walletAddress) {
+      try {
+        console.log(`Stripe Identity verification successful for wallet: ${walletAddress}`);
+        const countryCode = verificationSession.verified_outputs?.address?.country || 'N/A';
+        await issueStripeAttestation(walletAddress, "identity_document", countryCode);
+      } catch (error) {
+        console.error('Error during identity webhook processing:', error);
       }
     }
   }
@@ -119,9 +133,9 @@ async function checkGalxePassport(address) {
   }
 }
 
-async function issueStripeAttestation(recipientAddress, countryCode) {
+async function issueStripeAttestation(recipientAddress, verificationType, countryCode) {
   try {
-    console.log(`Attempting to issue attestation for ${recipientAddress}`);
+    console.log(`Attempting to issue '${verificationType}' attestation for ${recipientAddress}`);
     const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL);
     const signer = new Wallet(process.env.ISSUER_WALLET_PRIVATE_KEY, provider);
     const eas = new EAS(EASContractAddress);
@@ -130,7 +144,7 @@ async function issueStripeAttestation(recipientAddress, countryCode) {
     const schemaEncoder = new SchemaEncoder("bool isStripeVerified,string verificationType,string countryCode");
     const encodedData = schemaEncoder.encodeData([
       { name: "isStripeVerified", value: true, type: "bool" },
-      { name: "verificationType", value: "bank_account", type: "string" },
+      { name: "verificationType", value: verificationType, type: "string" },
       { name: "countryCode", value: countryCode, type: "string" },
     ]);
 
@@ -153,6 +167,25 @@ async function issueStripeAttestation(recipientAddress, countryCode) {
 
 
 // --- API Endpoints ---
+
+app.post('/api/create-identity-session', async (req, res) => {
+  try {
+    const { userWalletAddress } = req.body;
+
+    const verificationSession = await stripe.identity.verificationSessions.create({
+      type: 'document',
+      metadata: {
+        user_wallet_address: userWalletAddress,
+      },
+      return_url: `${FRONTEND_URL}/dashboard?verification_status=success`,
+    });
+
+    res.json({ url: verificationSession.url });
+  } catch (error) {
+    console.error('Error creating Stripe Identity session:', error);
+    res.status(500).json({ error: 'Failed to create Stripe Identity session' });
+  }
+});
 
 // Endpoint for the frontend to check for the Binance BAB token
 app.get('/api/check-bab-token/:address', async (req, res) => {

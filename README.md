@@ -61,7 +61,8 @@ graph TD
     A -- "Checks for Galxe Passport via API call" --> B;
     A -- "Queries for Stripe attestation<br/>to display in UI" --> N;
     A -- "Fetches testnet stats" --> I;
-    A -- "Initiates Stripe verification" --> B;
+    A -- "Initiates Stripe Bank verification" --> B;
+    A -- "Initiates Stripe ID verification" --> B;
     B -- "Creates Stripe Session" --> M;
     M -- "User completes auth flow &<br/>Stripe sends webhook" --> B;
     B -- "Stripe webhook triggers attestation" --> O;
